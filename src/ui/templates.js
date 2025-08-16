@@ -1,14 +1,39 @@
 // Default templates (override them via opts.templates)
 export const defaultTemplates = {
-  heart: ({ onClick, position, isOn }) => {
-    const btn = document.createElement('button')
-    btn.className = `pf-heart pf-heart--${
+  heart: ({ onClick, position, isOn, hasBookmarks, onShowOverlay }) => {
+    const wrap = document.createElement('div')
+    wrap.className = `pf-heart-wrap pf-heart-wrap--${
       position === 'left' ? 'left' : 'right'
     }`
+
+    // Heart button
+    const btn = document.createElement('button')
+    btn.className = 'pf-heart'
     btn.setAttribute('aria-label', 'Toggle bookmark')
     btn.textContent = isOn() ? '❤' : '♡'
-    btn.addEventListener('click', onClick)
-    return btn
+    btn.addEventListener('click', e => {
+      onClick(e)
+      if (hasBookmarks) {
+        wrap.classList.add('pf-show-temp')
+        setTimeout(() => wrap.classList.remove('pf-show-temp'), 1000) // 1s
+      }
+    })
+    wrap.appendChild(btn)
+
+    // Overlay toggle button (only render if bookmarks exist)
+    if (hasBookmarks) {
+      const showBtn = document.createElement('button')
+      showBtn.className = 'pf-show-bookmarks'
+      showBtn.setAttribute('aria-label', 'Show bookmarks list')
+      showBtn.textContent = '★'
+      showBtn.addEventListener('click', e => {
+        e.preventDefault()
+        onShowOverlay?.()
+      })
+      wrap.appendChild(showBtn)
+    }
+
+    return wrap
   },
 
   overlayBar: ({

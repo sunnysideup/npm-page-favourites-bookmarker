@@ -1,4 +1,30 @@
 /* Heart button UI */
+
+.pf-heart-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.pf-show-bookmarks {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    margin-left: 0.25rem;
+}
+
+/* Show on hover */
+.pf-heart-wrap:hover .pf-show-bookmarks {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Show temporarily after click */
+.pf-heart-wrap.pf-show-temp .pf-show-bookmarks {
+    opacity: 1;
+    pointer-events: auto;
+}
+
 .pf-heart {
     position: fixed;
     bottom: 16px;
@@ -9,10 +35,9 @@
     padding: 8px 10px;
     border-radius: 9999px;
     background: #fff;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
-    color: inherit;
-    opacity: 0.5;
     color: #000;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    opacity: 0.5;
     transition:
         opacity 0.3s ease,
         background-color 0.3s ease;
@@ -35,4 +60,8 @@
 /* “on” state */
 .pf-heart.pf-on {
     color: #e11d48;
+}
+.pf-heart:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
 }

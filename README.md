@@ -24,8 +24,8 @@ npm i  @sunnysideup/npm-page-favourites-bookmarker
 ### with a bundler (Vite/Webpack/Rollup)
 
 ```js
-import '@sunnysideup/page-favourites-bookmarker/src/index.css'
-import { PageFaves } from '@sunnysideup/page-favourites-bookmarker';
+import '@sunnysideup/npm-page-favourites-bookmarker/src/index.css'
+import { PageFaves } from '@sunnysideup/npm-page-favourites-bookmarker';
 
 
 ```
@@ -34,9 +34,9 @@ import { PageFaves } from '@sunnysideup/page-favourites-bookmarker';
 
 ```html
 
-<link rel="stylesheet" href="/node_modules/@sunnysideup/page-favourites-bookmarker/src/index.css">
+<link rel="stylesheet" href="/node_modules/@sunnysideup/npm-page-favourites-bookmarker/src/index.css">
 <script type="module">
-  import { PageFaves } from '/node_modules/@sunnysideup/page-favourites-bookmarker/src/index.js'
+  import { PageFaves } from '/node_modules/@sunnysideup/npm-page-favourites-bookmarker/src/index.js'
 
 </script>
 
@@ -47,8 +47,8 @@ import { PageFaves } from '@sunnysideup/page-favourites-bookmarker';
 #### simplest setup
 
 ```js
-import { PageFaves } from '@sunnysideup/page-favourites-bookmarker'
-import '@sunnysideup/page-favourites-bookmarker/src/index.css'
+import { PageFaves } from '@sunnysideup/npm-page-favourites-bookmarker'
+import '@sunnysideup/npm-page-favourites-bookmarker/src/index.css'
 
 const pf = new PageFaves({
   storage: 'local',
@@ -71,9 +71,9 @@ pf.init()
 
 ```js
 
-import { PageFaves } from '@sunnysideup/page-favourites-bookmarker'
-import { defaultTemplates } from '@sunnysideup/page-favourites-bookmarker/src/ui/templates.js'
-import '@sunnysideup/page-favourites-bookmarker/src/index.css'
+import { PageFaves } from '@sunnysideup/npm-page-favourites-bookmarker'
+import { defaultTemplates } from '@sunnysideup/npm-page-favourites-bookmarker/src/ui/templates.js'
+import '@sunnysideup/npm-page-favourites-bookmarker/src/index.css'
 
 const pf = new PageFaves({
   storage: 'local',

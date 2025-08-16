@@ -1,5 +1,6 @@
 {
     "name": "@sunnysideup/npm-page-favourites-bookmarker",
+    "description": "NPM package - to bookmark / favourite any page on a website",
     "type": "module",
     "module": "./src/index.js",
     "main": "./src/index.js",
@@ -10,12 +11,11 @@
         },
         "./styles.css": "./src/index.scss"
     },
-    "style": "src/index.css",
+    "style": "src/index.scss",
     "sideEffects": false,
     "files": [
         "src/"
     ],
-    "description": "NPM package - to bookmark / favourite any page on a website",
     "license": "MIT",
     "repository": "sunnysideup/npm-page-favourites-bookmarker",
     "keywords": [

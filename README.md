@@ -1,4 +1,4 @@
-# @sunnysideup/page-favourites-bookmarker
+# @sunnysideup/npm-page-favourites-bookmarker
 
 Tiny in-page bookmark manager with a heart button, overlay list, and optional server sync (email/phone verification supported).
 
@@ -16,7 +16,7 @@ Tiny in-page bookmark manager with a heart button, overlay list, and optional se
 ## Install
 
 ```bash
-npm i  @sunnysideup/page-favourites-bookmarker
+npm i  @sunnysideup/npm-page-favourites-bookmarker
 ```
 
 ## Usage

@@ -9,7 +9,7 @@
             "import": "./src/index.js",
             "default": "./src/index.js"
         },
-        "./styles.css": "./src/index.scss"
+        "./styles": "./src/index.scss"
     },
     "style": "src/index.scss",
     "sideEffects": false,

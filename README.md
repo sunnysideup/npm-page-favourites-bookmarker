@@ -60,7 +60,7 @@ const pf = new PageFaves({
     bookmarks: '/user/bookmarks' 
   },
   heartPosition: 'right',
-  overlayHotkey: 'KeyB',
+  overlayHotkey: 'KeyB', // this will need to be pressed with CTRL+SHIFT
   syncOnLoad: true
 })
 pf.init()
@@ -85,7 +85,7 @@ const pf = new PageFaves({
     bookmarks: '/user/bookmarks'
   },
   heartPosition: 'right',
-  overlayHotkey: 'KeyB',
+  overlayHotkey: 'KeyB', // this will need to be pressed with CTRL+SHIFT
   syncOnLoad: true,
   templates: {
     heart: ({ onClick, position, isOn }) => {

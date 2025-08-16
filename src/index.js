@@ -104,11 +104,23 @@ export class PageFaves {
   toggleCurrent () {
     this.isBookmarked() ? this.removeCurrent() : this.addCurrent()
   }
+  #escListener = null
+
   showOverlay () {
     this.overlay.show()
+    if (this.#escListener) return
+    this.#escListener = e => {
+      if (e.code === 'Escape') this.hideOverlay()
+    }
+    window.addEventListener('keydown', this.#escListener)
   }
+
   hideOverlay () {
     this.overlay.hide()
+    if (this.#escListener) {
+      window.removeEventListener('keydown', this.#escListener)
+      this.#escListener = null
+    }
   }
 
   add (url, title) {
@@ -159,8 +171,9 @@ export class PageFaves {
     window.addEventListener('keydown', e => {
       if (
         e.code === this.opts.overlayHotkey &&
+        e.ctrlKey &&
+        e.shiftKey &&
         !e.metaKey &&
-        !e.ctrlKey &&
         !e.altKey
       ) {
         e.preventDefault()

@@ -9,8 +9,19 @@
     padding: 8px 10px;
     border-radius: 9999px;
     background: #fff;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, .15);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
     color: inherit;
+    opacity: 0.5;
+    color: #000;
+    transition:
+        opacity 0.3s ease,
+        background-color 0.3s ease;
+
+    &:hover,
+    &:focus,
+    &:active {
+        opacity: 1;
+    }
 }
 
 .pf-heart--left {

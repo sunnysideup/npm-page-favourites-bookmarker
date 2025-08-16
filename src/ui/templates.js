@@ -1,40 +1,28 @@
 // Default templates (override them via opts.templates)
 export const defaultTemplates = {
-  heart: ({ onClick, position, isOn, hasBookmarks, onShowOverlay }) => {
-    const wrap = document.createElement('div')
-    wrap.className = `pf-heart-wrap pf-heart-wrap--${
-      position === 'left' ? 'left' : 'right'
-    }`
+  heart: ({ onClick, onShowOverlay, position, isOn, hasBookmarks }) => {
+  const wrap = document.createElement('div')
+  wrap.className = `pf-heart-wrap pf-heart-wrap--${position === 'left' ? 'left' : 'right'}`
 
-    // Heart button
-    const btn = document.createElement('button')
-    btn.className = 'pf-heart'
-    btn.setAttribute('aria-label', 'Toggle bookmark')
-    btn.textContent = isOn() ? '❤' : '♡'
-    btn.addEventListener('click', e => {
-      onClick(e)
-      if (hasBookmarks) {
-        wrap.classList.add('pf-show-temp')
-        setTimeout(() => wrap.classList.remove('pf-show-temp'), 1000) // 1s
-      }
-    })
-    wrap.appendChild(btn)
+  const btn = document.createElement('button')
+  btn.className = 'pf-heart'
+  btn.setAttribute('aria-label','Toggle bookmark')
+  btn.textContent = isOn() ? '❤' : '♡'
+  btn.addEventListener('click', onClick)
+  wrap.appendChild(btn)
 
-    // Overlay toggle button (only render if bookmarks exist)
-    if (hasBookmarks) {
-      const showBtn = document.createElement('button')
-      showBtn.className = 'pf-show-bookmarks'
-      showBtn.setAttribute('aria-label', 'Show bookmarks list')
-      showBtn.textContent = '★'
-      showBtn.addEventListener('click', e => {
-        e.preventDefault()
-        onShowOverlay?.()
-      })
-      wrap.appendChild(showBtn)
-    }
+  // Always render; toggle visibility in update()
+  const showBtn = document.createElement('button')
+  showBtn.className = 'pf-show-bookmarks'
+  showBtn.setAttribute('aria-label','Show bookmarks list')
+  showBtn.title = 'Show bookmarks'
+  showBtn.textContent = '★'
+  showBtn.addEventListener('click', e => { e.preventDefault(); onShowOverlay() })
+  if (!hasBookmarks()) showBtn.style.display = 'none'
+  wrap.appendChild(showBtn)
 
-    return wrap
-  },
+  return wrap
+},
 
   overlayBar: ({
     onClose,

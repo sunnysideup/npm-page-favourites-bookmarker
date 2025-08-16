@@ -1,67 +1,39 @@
-/* Heart button UI */
-
-.pf-heart-wrap {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
+/* wrapper is fixed + positioned */
+.pf-heart-wrap{
+  position: fixed;
+  bottom: 16px;
+  z-index: 999999;
+  display: inline-flex;
+  align-items: center;
 }
 
-.pf-show-bookmarks {
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease;
-    margin-left: 0.25rem;
+.pf-heart-wrap--left{ left: 16px; }
+.pf-heart-wrap--right{ right: 16px; }
+
+/* heart is just a styled button now */
+.pf-heart{
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+  padding: 8px 10px;
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(0,0,0,.15);
+  opacity: .5;
+  color: #000;
+  transition: opacity .3s ease, background-color .3s ease;
+}
+.pf-heart:focus-visible{ outline: 2px solid #2563eb; outline-offset: 2px; }
+.pf-heart:hover, .pf-heart:focus, .pf-heart:active{ opacity: 1; }
+
+.pf-heart.pf-on{ color:#e11d48; }
+
+/* reveal helper */
+.pf-show-bookmarks{
+  opacity:0; pointer-events:none; transition:opacity .2s ease; margin-left:.25rem;
+}
+.pf-heart-wrap:hover .pf-show-bookmarks,
+.pf-heart-wrap.pf-show-temp .pf-show-bookmarks{
+  opacity:1; pointer-events:auto;
 }
 
-/* Show on hover */
-.pf-heart-wrap:hover .pf-show-bookmarks {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-/* Show temporarily after click */
-.pf-heart-wrap.pf-show-temp .pf-show-bookmarks {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.pf-heart {
-    position: fixed;
-    bottom: 16px;
-    z-index: 999999;
-    cursor: pointer;
-    font-size: 24px;
-    line-height: 1;
-    padding: 8px 10px;
-    border-radius: 9999px;
-    background: #fff;
-    color: #000;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
-    opacity: 0.5;
-    transition:
-        opacity 0.3s ease,
-        background-color 0.3s ease;
-
-    &:hover,
-    &:focus,
-    &:active {
-        opacity: 1;
-    }
-}
-
-.pf-heart--left {
-    left: 16px;
-}
-
-.pf-heart--right {
-    right: 16px;
-}
-
-/* “on” state */
-.pf-heart.pf-on {
-    color: #e11d48;
-}
-.pf-heart:focus-visible {
-    outline: 2px solid #2563eb;
-    outline-offset: 2px;
-}

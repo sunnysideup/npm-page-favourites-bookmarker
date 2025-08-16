@@ -42,7 +42,9 @@ export class PageFaves {
     this.heart = new Heart({
       position: this.opts.heartPosition,
       isOn: () => this.isBookmarked(),
+      hasBookmarks: () => this.state.list().length > 0, // NEW
       onToggle: () => this.toggleCurrent(),
+      onShowOverlay: () => this.showOverlay(), // NEW
       template: this.opts.templates.heart
     })
 

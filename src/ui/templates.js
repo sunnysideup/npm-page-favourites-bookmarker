@@ -1,14 +1,14 @@
-// Default templates (override them via opts.templates)
 export const defaultTemplates = {
   heart: ({ onClick, onShowOverlay, position, isOn, hasBookmarks }) => {
     const wrap = document.createElement('div')
-    wrap.className = `pf-heart-wrap`
-    const positionLeftRight = position.leftRight === 'left' ? 'left' : 'right'
-    wrap.classList.add(`pf-heart-wrap--${positionLeftRight}`)
-    const positionTopBottom = position.topBottom === 'top' ? 'top' : 'bottom'
-    wrap.classList.add(`pf-heart-wrap--${positionTopBottom}`)
+    wrap.className = 'pf-heart-wrap'
+    wrap.classList.add(
+      `pf-heart-wrap--${position.leftRight === 'left' ? 'left' : 'right'}`
+    )
+    wrap.classList.add(
+      `pf-heart-wrap--${position.topBottom === 'top' ? 'top' : 'bottom'}`
+    )
 
-    // Always render; toggle visibility in update()
     const showBtn = document.createElement('button')
     showBtn.className = 'pf-show-bookmarks'
     showBtn.setAttribute('aria-label', 'Show bookmarks list')
@@ -24,22 +24,16 @@ export const defaultTemplates = {
     const btn = document.createElement('button')
     btn.className = 'pf-heart'
     btn.setAttribute('aria-label', 'Toggle bookmark')
-    btn.textContent = isOn() ? '❤' : '❤' //  ♡
+    const on = isOn()
+    btn.textContent = on ? '❤' : '♡'
+    btn.title = on ? 'Remove bookmark' : 'Add bookmark'
     btn.addEventListener('click', onClick)
-    btn.title = isOn() ? 'Bookmark' : 'Remove' //  ♡
     wrap.appendChild(btn)
 
     return wrap
   },
 
-  overlayBar: ({
-    onClose,
-    onSaveIdentity,
-    onRequestVerification,
-    onVerifyCode,
-    onSync,
-    identity
-  }) => {
+  overlayBar: ({ onClose, onSync, isLoggedIn, loginUrl }) => {
     const bar = document.createElement('div')
     bar.className = 'pf-bar'
 
@@ -47,42 +41,37 @@ export const defaultTemplates = {
     title.className = 'pf-title'
     title.textContent = 'Bookmarks'
 
-    const email = document.createElement('input')
-    email.className = 'pf-input pf-email'
-    email.type = 'text'
-    email.placeholder = 'Email'
-    const phone = document.createElement('input')
-    phone.className = 'pf-input pf-phone'
-    phone.type = 'text'
-    phone.placeholder = 'Phone'
-    if (identity) {
-      email.value = identity.email || ''
-      phone.value = identity.phone || ''
+    // universal close button
+    const close = document.createElement('button')
+    close.className = 'pf-btn pf-close'
+    close.type = 'button'
+    close.textContent = '×'
+    close.title = 'Close'
+    close.addEventListener('click', onClose)
+
+    // Logged-out UI: explanation + login link
+    if (isLoggedIn && !isLoggedIn()) {
+      const expl = document.createElement('span')
+      expl.className = 'pf-expl'
+      expl.textContent = 'Once logged in you can save your favourites.'
+
+      const login = document.createElement('a')
+      login.className = 'pf-btn pf-login'
+      login.href = loginUrl || '/account/login'
+      login.textContent = 'Login / Create account'
+
+      bar.append(title, expl, login, close)
+      return bar
     }
 
-    const mkBtn = (cls, label, handler) => {
-      const b = document.createElement('button')
-      b.className = `pf-btn ${cls}`
-      b.type = 'button'
-      b.textContent = label
-      b.addEventListener('click', handler)
-      return b
-    }
+    // Logged-in UI: sync + close
+    const sync = document.createElement('button')
+    sync.className = 'pf-btn pf-sync'
+    sync.type = 'button'
+    sync.textContent = 'Sync'
+    sync.addEventListener('click', onSync)
 
-    const save = mkBtn('pf-saveid', 'Save contact', () =>
-      onSaveIdentity({ email: email.value, phone: phone.value })
-    )
-    const verify = mkBtn('pf-verify', 'Verify', async () => {
-      await onRequestVerification().catch(() => {})
-      const code = prompt('Enter verification code:') || ''
-      if (!code) return
-      const ok = await onVerifyCode(code).catch(() => false)
-      alert(ok ? 'Verified!' : 'Verification failed')
-    })
-    const sync = mkBtn('pf-sync', 'Sync', () => onSync())
-    const close = mkBtn('pf-close', 'Close', () => onClose())
-
-    bar.append(title, email, phone, save, verify, sync, close)
+    bar.append(title, sync, close)
     return bar
   },
 

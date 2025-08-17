@@ -10,6 +10,9 @@ export class Overlay {
    *   onVerifyCode:(code:string)=>Promise<boolean>,
    *   onSync:()=>Promise<void>,
    *   getIdentity:()=>({email?:string,phone?:string}|null),
+   *   // NEW (optional)
+   *   isLoggedIn?: ()=>boolean,
+   *   loginUrl?: string,
    *   templates:{
    *     overlayBar:Function,
    *     overlayShell:Function,
@@ -39,7 +42,10 @@ export class Overlay {
       onRequestVerification: () => this.opts.onRequestVerification(),
       onVerifyCode: code => this.opts.onVerifyCode(code),
       onSync: () => this.opts.onSync(),
-      identity: this.opts.getIdentity?.()
+      identity: this.opts.getIdentity?.(),
+      // NEW: pass login awareness to template
+      isLoggedIn: this.opts.isLoggedIn,
+      loginUrl: this.opts.loginUrl
     })
     wrap.prepend(bar)
     document.body.appendChild(wrap)

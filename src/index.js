@@ -1,3 +1,4 @@
+import { deepMerge } from './core/utils.js'
 import { State } from './core/state.js'
 import { Net } from './core/net.js'
 import { defaultTemplates } from './ui/templates.js'
@@ -6,25 +7,41 @@ import { Overlay } from './ui/overlay.js'
 
 export class PageFaves {
   /** @param {object} opts */
-  constructor (opts = {}) {
-    this.opts = Object.assign(
-      {
-        storage: 'local',
-        baseUrl: '',
-        endpoints: {
-          events: 'events',
-          bookmarks: 'bookmarks'
-        },
-        heartPositionLeftRight: 'right',
-        heartPositionTopBottom: 'bottom',
-        overlayHotkey: 'KeyB',
-        syncOnLoad: false,
-        storageKey: 'pf.bookmarks',
-        templates: defaultTemplates
-      },
-      opts
-    )
+  constructor (siteWideOpts = {}) {
+    const pageConfig =
+      window.npmPageFavouritesBookmarker &&
+      typeof window.npmPageFavouritesBookmarker === 'object'
+        ? window.npmPageFavouritesBookmarker
+        : {}
 
+    const defaults = {
+      loadByDefault: true, // used when loadOnThisPage is undefined
+      loadOnThisPage: undefined, // allow per-page override; undefined -> fall back to loadByDefault
+      heartPositionLeftRight: 'right', // 'left' | 'right'
+      heartPositionTopBottom: 'bottom', // 'top'  | 'bottom'
+      overlayHotkey: 'KeyB',
+      storage: 'local',
+      storageKey: 'pf.bookmarks',
+      baseUrl: '',
+      endpoints: {
+        events: 'events',
+        bookmarks: 'bookmarks'
+      },
+      syncOnLoad: false,
+      templates: defaultTemplates
+    }
+
+    // precedence: defaults < pageConfig < constructor opts
+    this.opts = deepMerge(defaults, siteWideOpts, pageConfig)
+
+    // resolve final load flag
+    const { loadByDefault } = this.opts
+    const { loadOnThisPage } = this.opts
+    this.shouldLoad =
+      typeof loadOnThisPage === 'boolean' ? loadOnThisPage : !!loadByDefault
+    if (!this.shouldLoad) {
+      return
+    }
     this.state = new State({
       storage: this.opts.storage,
       storageKey: this.opts.storageKey

@@ -53,12 +53,12 @@ export const defaultTemplates = {
     if (isLoggedIn && !isLoggedIn()) {
       const expl = document.createElement('span')
       expl.className = 'pf-expl'
-      expl.textContent = 'Once logged in you can save your favourites.'
+      expl.textContent = ''
 
       const login = document.createElement('a')
       login.className = 'pf-btn pf-login'
       login.href = loginUrl || '/account/login'
-      login.textContent = 'Login / Create account'
+      login.textContent = 'Login / Create account to save'
 
       bar.append(title, expl, login, close)
       return bar
@@ -104,7 +104,7 @@ export const defaultTemplates = {
     const del = document.createElement('button')
     del.className = 'pf-btn pf-del'
     del.type = 'button'
-    del.textContent = 'x'
+    del.textContent = '×'
     del.addEventListener('click', () => onRemove(item.url))
 
     row.append(drag, a, del)

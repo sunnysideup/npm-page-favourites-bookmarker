@@ -6,7 +6,7 @@ import { Heart } from './ui/heart.js'
 import { Overlay } from './ui/overlay.js'
 
 export class PageFaves {
-  /** @param {object} opts */
+  /** @param {object} siteWideOpts */
   constructor (siteWideOpts = {}) {
     const pageConfig =
       window.npmPageFavouritesBookmarker &&
@@ -15,10 +15,10 @@ export class PageFaves {
         : {}
 
     const defaults = {
-      loadByDefault: true, // used when loadOnThisPage is undefined
-      loadOnThisPage: undefined, // allow per-page override; undefined -> fall back to loadByDefault
-      heartPositionLeftRight: 'right', // 'left' | 'right'
-      heartPositionTopBottom: 'bottom', // 'top'  | 'bottom'
+      loadByDefault: true,
+      loadOnThisPage: undefined,
+      heartPositionLeftRight: 'right',
+      heartPositionTopBottom: 'bottom',
       overlayHotkey: 'KeyB',
       storage: 'local',
       storageKey: 'pf.bookmarks',
@@ -27,21 +27,23 @@ export class PageFaves {
         events: 'events',
         bookmarks: 'bookmarks'
       },
+      // NEW: login + throttling
+      userIsLoggedIn: false,
+      loginUrl: '/account/login',
       syncOnLoad: false,
+      syncMinIntervalMs: 10 * 60 * 1000, // 10 min
+      lastSyncKey: 'pf.lastSync',
       templates: defaultTemplates
     }
 
-    // precedence: defaults < pageConfig < constructor opts
+    // precedence: defaults < siteWideOpts < pageConfig
     this.opts = deepMerge(defaults, siteWideOpts, pageConfig)
 
-    // resolve final load flag
-    const { loadByDefault } = this.opts
-    const { loadOnThisPage } = this.opts
+    const { loadByDefault, loadOnThisPage } = this.opts
     this.shouldLoad =
       typeof loadOnThisPage === 'boolean' ? loadOnThisPage : !!loadByDefault
-    if (!this.shouldLoad) {
-      return
-    }
+    if (!this.shouldLoad) return
+
     this.state = new State({
       storage: this.opts.storage,
       storageKey: this.opts.storageKey
@@ -57,9 +59,9 @@ export class PageFaves {
         topBottom: this.opts.heartPositionTopBottom
       },
       isOn: () => this.isBookmarked(),
-      hasBookmarks: () => this.state.list().length > 0, // NEW
+      hasBookmarks: () => this.state.list().length > 0,
       onToggle: () => this.toggleCurrent(),
-      onShowOverlay: () => this.showOverlay(), // NEW
+      onShowOverlay: () => this.showOverlay(),
       template: this.opts.templates.heart
     })
 
@@ -70,18 +72,23 @@ export class PageFaves {
         this.overlay.renderList()
         this.heart.update()
       },
+      // CHANGED: ping on reorder too
       onReorder: (from, to) => {
         this.state.reorder(from, to)
+        this.#ping('reordered', { from, to })
         this.overlay.renderList()
       },
       onClose: () => this.hideOverlay(),
       onSaveIdentity: id => {
-        this.saveIdentity(id)
+        this.saveIdentity?.(id)
       },
-      onRequestVerification: () => this.requestVerification(),
-      onVerifyCode: code => this.verifyCode(code),
+      onRequestVerification: () => this.requestVerification?.(),
+      onVerifyCode: code => this.verifyCode?.(code),
       onSync: () => this.syncFromServer().then(() => this.overlay.renderList()),
       getIdentity: () => this.state.identity,
+      // NEW: pass login awareness to overlay (for CTA)
+      isLoggedIn: () => !!this.opts.userIsLoggedIn,
+      loginUrl: this.opts.loginUrl,
       templates: {
         overlayBar: this.opts.templates.overlayBar,
         overlayShell: this.opts.templates.overlayShell,
@@ -97,8 +104,10 @@ export class PageFaves {
   init () {
     this.heart.mount()
     this.#bindHotkey()
-    if (this.opts.syncOnLoad && this.state.verified)
-      this.syncFromServer().catch(() => {})
+    // CHANGED: only sync if logged in, server set, and stale
+    if (this.opts.syncOnLoad && this.opts.userIsLoggedIn) {
+      this.#syncIfStale().catch(() => {})
+    }
     this.heart.update()
   }
 
@@ -131,7 +140,6 @@ export class PageFaves {
     }
     window.addEventListener('keydown', this.#escListener)
   }
-
   hideOverlay () {
     this.overlay.hide()
     if (this.#escListener) {
@@ -152,8 +160,16 @@ export class PageFaves {
   }
 
   async syncFromServer () {
+    if (!this.#canServer()) return
     const serverList = await this.net.getJSON(this.net.endpoints.bookmarks)
     this.state.mergeFromServer(serverList)
+    // stamp last sync
+    const store = this.state.store ?? window.localStorage
+    try {
+      store.setItem
+        ? store.setItem(this.opts.lastSyncKey, String(Date.now()))
+        : this.state.store.set(this.opts.lastSyncKey, String(Date.now()))
+    } catch {}
     this.overlay.renderList()
   }
 
@@ -173,7 +189,7 @@ export class PageFaves {
     })
   }
   async #ping (type, payload) {
-    if (!this.net.baseUrl) return
+    if (!this.#canServer()) return
     try {
       await this.net.post(this.net.endpoints.events, {
         type,
@@ -181,5 +197,25 @@ export class PageFaves {
         at: Date.now()
       })
     } catch {}
+  }
+  #canServer () {
+    return !!this.net?.baseUrl
+  }
+
+  // NEW: 10-min throttle
+  async #syncIfStale () {
+    if (!this.#canServer()) return
+    const store = this.state.store ?? window.localStorage
+    let last = 0
+    try {
+      last =
+        Number(
+          store.getItem
+            ? store.getItem(this.opts.lastSyncKey)
+            : this.state.store.get(this.opts.lastSyncKey)
+        ) || 0
+    } catch {}
+    if (Date.now() - last < this.opts.syncMinIntervalMs) return
+    await this.syncFromServer()
   }
 }

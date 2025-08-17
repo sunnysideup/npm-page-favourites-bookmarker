@@ -1,15 +1,13 @@
 // Fetch helpers + endpoint resolution
 export class Net {
   /**
-   * @param {{ baseUrl?: string, endpoints?: Partial<{events:string,identityRequest:string,identityVerify:string,bookmarks:string}> }} opts
+   * @param {{ baseUrl?: string, endpoints?: Partial<{events:string,bookmarks:string}> }} opts
    */
   constructor (opts = {}) {
     this.baseUrl = (opts.baseUrl || '').replace(/\/+$/, '')
     this.endpoints = Object.assign(
       {
         events: 'events',
-        identityRequest: 'identity/request',
-        identityVerify: 'identity/verify',
         bookmarks: 'bookmarks'
       },
       opts.endpoints || {}

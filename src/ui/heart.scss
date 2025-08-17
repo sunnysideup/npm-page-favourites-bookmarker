@@ -1,39 +1,124 @@
-/* wrapper is fixed + positioned */
-.pf-heart-wrap{
-  position: fixed;
+/**
+  * Heart UI Component Styles
+  * This file contains styles for the heart component used in the UI.
+  * It includes positioning, hover effects, and responsive design.
+  */
+
+/**
+ * positioning
+ */
+
+.pf-heart-wrap--top {
+  top: 16px;
+}
+.pf-heart-wrap--bottom {
   bottom: 16px;
-  z-index: 999999;
-  display: inline-flex;
-  align-items: center;
 }
 
-.pf-heart-wrap--left{ left: 16px; }
-.pf-heart-wrap--right{ right: 16px; }
+.pf-heart-wrap--left {
+  left: 16px;
+}
+.pf-heart-wrap--right {
+  right: 16px;
+}
+/**
+ * wrapper
+ */
 
-/* heart is just a styled button now */
-.pf-heart{
-  cursor: pointer;
+/* wrapper is fixed + positioned */
+.pf-heart-wrap {
+  position: fixed;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
   font-size: 24px;
   line-height: 1;
-  padding: 8px 10px;
+  padding: 8px;
   border-radius: 9999px;
   background: #fff;
-  box-shadow: 0 4px 14px rgba(0,0,0,.15);
-  opacity: .5;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  opacity: 0.5;
   color: #000;
-  transition: opacity .3s ease, background-color .3s ease;
-}
-.pf-heart:focus-visible{ outline: 2px solid #2563eb; outline-offset: 2px; }
-.pf-heart:hover, .pf-heart:focus, .pf-heart:active{ opacity: 1; }
+  transition:
+    height 0.3s ease,
+    width 0.3s ease,
+    opacity 0.3s ease,
+    background-color 0.3s ease;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-content: center;
+  flex-wrap: nowrap;
+  gap: 16px;
+  width: 24px;
+  height: 24px;
+  &:hover,
+  &:focus,
+  &:active,
+  &.pf-show-temp {
+    opacity: 1;
+    background-color: #f3f4f6; /* light gray on hover */
+    overflow: visible;
+    width: auto;
+    .pf-show-bookmarks {
+      display: block;
+      opacity: 1;
+      width: auto;
+      height: auto;
+      pointer-events: auto;
+      overflow: visible;
+    }
+  }
+  /**
+   * buttons
+   */
 
-.pf-heart.pf-on{ color:#e11d48; }
+  > button {
+    display: block;
+    color: #000 !important;
+    transition: color 0.3s ease;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    line-height: 1;
+    &:hover {
+      color: #e11d48 !important; /* red on hover */
+    }
+  }
 
-/* reveal helper */
-.pf-show-bookmarks{
-  opacity:0; pointer-events:none; transition:opacity .2s ease; margin-left:.25rem;
-}
-.pf-heart-wrap:hover .pf-show-bookmarks,
-.pf-heart-wrap.pf-show-temp .pf-show-bookmarks{
-  opacity:1; pointer-events:auto;
-}
+  /**
+   * heart
+   */
 
+  .pf-heart {
+    filter: grayscale(100%);
+    transition:
+      color 0.3s ease,
+      filter 0.3s ease;
+    &.pf-on {
+      color: #e11d48 !important; /* red when on */
+      filter: grayscale(0%) !important;
+    }
+  }
+
+  /**
+   * reveal all
+   */
+
+  .pf-show-bookmarks {
+    display: none;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    overflow: hidden;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    margin-left: 0.25rem;
+    transition:
+      width 0.3s ease,
+      height 0.3s ease,
+      opacity 0.3s ease;
+  }
+}

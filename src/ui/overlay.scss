@@ -50,8 +50,12 @@
     border-bottom: 1px dashed #eee;
 }
 
-.pf-drag {
+.pf-sort {
     cursor: grab;
+}
+
+.pf-sort:active {
+    cursor: grabbing;
 }
 
 .pf-link {

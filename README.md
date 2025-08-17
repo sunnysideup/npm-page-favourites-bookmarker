@@ -55,17 +55,33 @@ const pf = new PageFaves({
   baseUrl: 'https://api.example.com/my-controller',
   endpoints: { 
     events: '/track', 
-    identityRequest: '/auth/send-code', 
-    identityVerify: '/auth/verify-code', 
     bookmarks: '/user/bookmarks' 
   },
-  heartPosition: 'right',
+  heartPositionLeftRight: 'right',
+  heartPositionTopBottom: 'bottom',
   overlayHotkey: 'KeyB', // this will need to be pressed with CTRL+SHIFT
   syncOnLoad: true
 })
 pf.init()
 
 ```
+
+### customise per page
+
+Add the following to your html:
+
+```html
+
+<script>
+  window.npmPageFavouritesBookmarker = {
+    includeOnThisPage: false,
+    userIsLoggedIn: true,
+    heartPositionLeftRight: 'right',
+    heartPositionTopBottom: 'bottom',
+  }
+</script>
+```
+
 
 #### customise templates
 
@@ -80,11 +96,10 @@ const pf = new PageFaves({
   baseUrl: 'https://api.example.com/my-controller',
   endpoints: {
     events: '/track',
-    identityRequest: '/auth/send-code',
-    identityVerify: '/auth/verify-code',
     bookmarks: '/user/bookmarks'
   },
-  heartPosition: 'right',
+  heartPositionLeftRight: 'right',
+  heartPositionTopBottom: 'bottom',
   overlayHotkey: 'KeyB', // this will need to be pressed with CTRL+SHIFT
   syncOnLoad: true,
   templates: {
@@ -143,8 +158,6 @@ pf.init()
 You can override each endpoint individually in `endpoints`.
 
 - `POST {events}` → `{ type, payload, at }` (called on add/remove/identity)  
-- `POST {identityRequest}` → `{ identity }` → server sends code  
-- `POST {identityVerify}` → `{ code, identity }` → returns `{ verified:true }`  
 - `GET {bookmarks}` → `[{ url, title, ts }]`  
 
 ## Server examples

@@ -13,16 +13,13 @@ export class PageFaves {
         baseUrl: '',
         endpoints: {
           events: 'events',
-          identityRequest: 'identity/request',
-          identityVerify: 'identity/verify',
           bookmarks: 'bookmarks'
         },
-        heartPosition: 'right',
+        heartPositionLeftRight: 'right',
+        heartPositionTopBottom: 'bottom',
         overlayHotkey: 'KeyB',
         syncOnLoad: false,
         storageKey: 'pf.bookmarks',
-        identKey: 'pf.identity',
-        verifiedKey: 'pf.verified',
         templates: defaultTemplates
       },
       opts
@@ -30,9 +27,7 @@ export class PageFaves {
 
     this.state = new State({
       storage: this.opts.storage,
-      storageKey: this.opts.storageKey,
-      identKey: this.opts.identKey,
-      verifiedKey: this.opts.verifiedKey
+      storageKey: this.opts.storageKey
     })
     this.net = new Net({
       baseUrl: this.opts.baseUrl,
@@ -40,7 +35,10 @@ export class PageFaves {
     })
 
     this.heart = new Heart({
-      position: this.opts.heartPosition,
+      position: {
+        leftRight: this.opts.heartPositionLeftRight,
+        topBottom: this.opts.heartPositionTopBottom
+      },
       isOn: () => this.isBookmarked(),
       hasBookmarks: () => this.state.list().length > 0, // NEW
       onToggle: () => this.toggleCurrent(),
@@ -134,32 +132,6 @@ export class PageFaves {
     const ok = this.state.remove(url)
     if (ok) this.#ping('removed', { url })
     return ok
-  }
-
-  saveIdentity ({ email = '', phone = '' } = {}) {
-    const id = this.state.setIdentity({ email, phone })
-    this.#ping('identity_saved', id)
-    return id
-  }
-  requestVerification () {
-    return this.net
-      .post(this.net.endpoints.identityRequest, {
-        identity: this.state.identity
-      })
-      .then(() => {})
-  }
-  verifyCode (code) {
-    return this.net
-      .post(this.net.endpoints.identityVerify, {
-        code,
-        identity: this.state.identity
-      })
-      .then(res => {
-        const ok = !!res?.verified
-        this.state.setVerified(ok)
-        if (ok) this.#ping('verified', {})
-        return ok
-      })
   }
 
   async syncFromServer () {

@@ -1,28 +1,36 @@
 // Default templates (override them via opts.templates)
 export const defaultTemplates = {
   heart: ({ onClick, onShowOverlay, position, isOn, hasBookmarks }) => {
-  const wrap = document.createElement('div')
-  wrap.className = `pf-heart-wrap pf-heart-wrap--${position === 'left' ? 'left' : 'right'}`
+    const wrap = document.createElement('div')
+    wrap.className = `pf-heart-wrap`
+    const positionLeftRight = position.leftRight === 'left' ? 'left' : 'right'
+    wrap.classList.add(`pf-heart-wrap--${positionLeftRight}`)
+    const positionTopBottom = position.topBottom === 'top' ? 'top' : 'bottom'
+    wrap.classList.add(`pf-heart-wrap--${positionTopBottom}`)
 
-  const btn = document.createElement('button')
-  btn.className = 'pf-heart'
-  btn.setAttribute('aria-label','Toggle bookmark')
-  btn.textContent = isOn() ? '❤' : '♡'
-  btn.addEventListener('click', onClick)
-  wrap.appendChild(btn)
+    // Always render; toggle visibility in update()
+    const showBtn = document.createElement('button')
+    showBtn.className = 'pf-show-bookmarks'
+    showBtn.setAttribute('aria-label', 'Show bookmarks list')
+    showBtn.title = 'Show bookmarks'
+    showBtn.textContent = '≡'
+    showBtn.addEventListener('click', e => {
+      e.preventDefault()
+      onShowOverlay()
+    })
+    if (!hasBookmarks()) showBtn.style.display = 'none'
+    wrap.appendChild(showBtn)
 
-  // Always render; toggle visibility in update()
-  const showBtn = document.createElement('button')
-  showBtn.className = 'pf-show-bookmarks'
-  showBtn.setAttribute('aria-label','Show bookmarks list')
-  showBtn.title = 'Show bookmarks'
-  showBtn.textContent = '★'
-  showBtn.addEventListener('click', e => { e.preventDefault(); onShowOverlay() })
-  if (!hasBookmarks()) showBtn.style.display = 'none'
-  wrap.appendChild(showBtn)
+    const btn = document.createElement('button')
+    btn.className = 'pf-heart'
+    btn.setAttribute('aria-label', 'Toggle bookmark')
+    btn.textContent = isOn() ? '❤' : '❤' //  ♡
+    btn.addEventListener('click', onClick)
+    btn.title = isOn() ? 'Bookmark' : 'Remove' //  ♡
+    wrap.appendChild(btn)
 
-  return wrap
-},
+    return wrap
+  },
 
   overlayBar: ({
     onClose,
@@ -95,7 +103,7 @@ export const defaultTemplates = {
     const drag = document.createElement('span')
     drag.className = 'pf-sort'
     drag.title = 'Drag'
-    drag.textContent = '⋮⋮'
+    drag.textContent = '⋮'
 
     const a = document.createElement('a')
     a.className = 'pf-link'
@@ -107,7 +115,7 @@ export const defaultTemplates = {
     const del = document.createElement('button')
     del.className = 'pf-btn pf-del'
     del.type = 'button'
-    del.textContent = 'Remove'
+    del.textContent = 'x'
     del.addEventListener('click', () => onRemove(item.url))
 
     row.append(drag, a, del)

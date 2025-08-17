@@ -2,15 +2,29 @@ import { Store } from './store.js'
 
 export class State {
   /**
-   * @param {{storage:'local'|'session', storageKey:string, identKey:string, verifiedKey:string}} opts
+   * @param {{storage:'local'|'session', storageKey:string}} opts
    */
   constructor (opts) {
     this.opts = opts
-    this.store = new Store(opts.storage)
+    this.store = new Store(opts.storage) // use caller's choice
+
+    // initial load
     this.bookmarks = this.store.getJSON(opts.storageKey) || []
-    this.identity = this.store.getJSON(opts.identKey) || null
-    this.verified = this.store.get(opts.verifiedKey) === '1'
     this.listeners = new Set()
+
+    // cross-tab / external updates
+    this.store.onChange(key => {
+      let changed = false
+      if (key === this.opts.storageKey) {
+        const next = this.store.getJSON(this.opts.storageKey) || []
+        if (JSON.stringify(next) !== JSON.stringify(this.bookmarks)) {
+          this.bookmarks = next
+          changed = true
+        }
+      }
+
+      if (changed) this.#emit()
+    })
   }
 
   onChange (fn) {
@@ -65,15 +79,11 @@ export class State {
     this.persist()
   }
 
-  /** Public persist (saves all state + notifies listeners) */
   persist () {
     this.store.setJSON(this.opts.storageKey, this.bookmarks)
-    if (this.identity) this.store.setJSON(this.opts.identKey, this.identity)
-    this.store.set(this.opts.verifiedKey, this.verified ? '1' : '')
     this.#emit()
   }
 
-  /** Merge bookmarks from server by URL (keeps latest ts if provided) */
   mergeFromServer (serverList = []) {
     if (!Array.isArray(serverList)) return
     const map = new Map(this.bookmarks.map(b => [b.url, b]))

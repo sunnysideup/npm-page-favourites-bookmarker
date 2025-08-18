@@ -17,7 +17,10 @@
         "src/"
     ],
     "license": "MIT",
-    "repository": "sunnysideup/npm-page-favourites-bookmarker",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/sunnysideup/npm-page-favourites-bookmarker.git"
+    },
     "keywords": [
         "bookmark",
         "favourite",

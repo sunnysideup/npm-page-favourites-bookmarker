@@ -29,6 +29,10 @@
         .pf-close {
             margin-left: auto;
             border: none;
+            &:hover {
+                background-color: #555;
+                color: #fff;
+            }
         }
     }
 

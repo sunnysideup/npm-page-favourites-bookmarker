@@ -19,8 +19,12 @@
             flex: 1;
         }
         .pf-login {
-            padding: 0px 8px;
+            padding: 0px 16px;
             text-decoration: none;
+            &:hover {
+                background-color: green;
+                color: #fff;
+            }
         }
         .pf-close {
             margin-left: auto;
@@ -29,7 +33,6 @@
     }
 
     .pf-btn {
-        border: 1px solid #ddd;
         border-radius: 9999px;
         padding: 6px 10px;
         background: #fafafa;
@@ -41,6 +44,7 @@
         display: block;
         &:hover {
             background: #e11d48;
+            color: #fff;
         }
         height: 3rem !important;
         line-height: 3rem !important;

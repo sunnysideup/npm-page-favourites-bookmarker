@@ -101,13 +101,74 @@ export class PageFaves {
     })
   }
 
-  init () {
+  #started = false
+  #initPromise = null
+
+  // replace your current init()
+  init ({
+    delayMs = 2000,
+    waitForLoad = true,
+    interactionEvents = [
+      'scroll',
+      'pointerdown',
+      'click',
+      'keydown',
+      'wheel',
+      'touchstart',
+      'mousemove'
+    ]
+  } = {}) {
+    if (this.#initPromise) return this.#initPromise
+
+    this.#initPromise = new Promise(resolve => {
+      const schedule = () => {
+        if (this.#started) {
+          resolve()
+          return
+        }
+
+        const controller = new AbortController()
+        const { signal } = controller
+        const start = async () => {
+          if (this.#started) return
+          controller.abort()
+          clearTimeout(timer)
+          await this.#start()
+          resolve()
+        }
+
+        const timer = setTimeout(start, delayMs)
+        const fire = () => {
+          clearTimeout(timer)
+          start()
+        }
+        interactionEvents.forEach(evt =>
+          addEventListener(evt, fire, { once: true, passive: true, signal })
+        )
+      }
+
+      if (waitForLoad && document.readyState !== 'complete') {
+        addEventListener('load', schedule, { once: true })
+      } else {
+        schedule()
+      }
+    })
+
+    return this.#initPromise
+  }
+
+  // new: the real initializer (what your old init did)
+  async #start () {
+    if (this.#started) return
+    this.#started = true
+
     this.heart.mount()
     this.#bindHotkey()
-    // CHANGED: only sync if logged in, server set, and stale
+
     if (this.opts.syncOnLoad && this.opts.userIsLoggedIn) {
       this.#syncIfStale().catch(() => {})
     }
+
     this.heart.update()
   }
 

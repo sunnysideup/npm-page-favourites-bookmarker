@@ -33,7 +33,9 @@ export class PageFaves {
       syncOnLoad: false,
       syncMinIntervalMs: 10 * 60 * 1000, // 10 min
       lastSyncKey: 'pf.lastSync',
-      templates: defaultTemplates
+      templates: defaultTemplates,
+      currentPageUrl: undefined,
+      currentPageTitle: undefined,
     }
 
     // precedence: defaults < siteWideOpts < pageConfig
@@ -255,7 +257,7 @@ export class PageFaves {
     })
   }
 
-        async #ping(type, payload) {
+  async #ping (type, payload) {
     if (!this.#canServer()) return
     try {
       const { ok, data } = await this.net.post(this.net.endpoints.events, {
@@ -264,7 +266,11 @@ export class PageFaves {
         at: Date.now()
       })
 
-      if (ok && data?.status === 'success' && Number.isInteger(data.numberOfBookmarks)) {
+      if (
+        ok &&
+        data?.status === 'success' &&
+        Number.isInteger(data.numberOfBookmarks)
+      ) {
         const localCount = await this.getLocalBookmarkCount()
         if (localCount !== data.numberOfBookmarks) {
           await this.syncFromServer

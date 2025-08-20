@@ -19,15 +19,19 @@ export class Net {
     return this.baseUrl ? `${this.baseUrl}/${p}` : p
   }
 
-  async post (pathLike, body) {
-    if (!this.baseUrl) return {}
+  async post(pathLike, body) {
+    if (!this.baseUrl) return { ok: false, data: {} }
+
     const res = await fetch(this.url(pathLike), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify(body)
     })
-    return await res.json().catch(() => ({}))
+
+    let data = {}
+    try { data = await res.json() } catch {}
+    return { ok: res.status === 200, data }
   }
 
   async getJSON (pathLike) {

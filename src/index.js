@@ -233,7 +233,9 @@ export class PageFaves {
       store.setItem
         ? store.setItem(this.opts.lastSyncKey, String(Date.now()))
         : this.state.store.set(this.opts.lastSyncKey, String(Date.now()))
-    } catch {}
+    } catch (err) {
+      console.error('Ping failed', err)
+    }
     this.overlay.renderList()
   }
 
@@ -252,7 +254,8 @@ export class PageFaves {
       }
     })
   }
-  async #ping(type, payload) {
+
+        async #ping(type, payload) {
     if (!this.#canServer()) return
     try {
       const { ok, data } = await this.net.post(this.net.endpoints.events, {

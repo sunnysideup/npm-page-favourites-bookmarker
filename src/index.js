@@ -29,7 +29,7 @@ export class PageFaves {
       },
       // NEW: login + throttling
       userIsLoggedIn: false,
-      loginUrl: '/account/login',
+      loginUrl: '/Security/login',
       syncOnLoad: false,
       syncMinIntervalMs: 10 * 60 * 1000, // 10 min
       lastSyncKey: 'pf.lastSync',
@@ -188,6 +188,9 @@ export class PageFaves {
   list () {
     return this.state.list()
   }
+  getLocalBookmarkCount () {
+    return this.state.list().length
+  }
   toggleCurrent () {
     this.isBookmarked() ? this.removeCurrent() : this.addCurrent()
   }
@@ -249,15 +252,24 @@ export class PageFaves {
       }
     })
   }
-  async #ping (type, payload) {
+  async #ping(type, payload) {
     if (!this.#canServer()) return
     try {
-      await this.net.post(this.net.endpoints.events, {
+      const { ok, data } = await this.net.post(this.net.endpoints.events, {
         type,
         payload,
         at: Date.now()
       })
-    } catch {}
+
+      if (ok && data?.status === 'success' && Number.isInteger(data.numberOfBookmarks)) {
+        const localCount = await this.getLocalBookmarkCount()
+        if (localCount !== data.numberOfBookmarks) {
+          await this.syncFromServer
+        }
+      }
+    } catch (err) {
+      console.error('Ping failed', err)
+    }
   }
   #canServer () {
     return !!this.net?.baseUrl
@@ -275,7 +287,9 @@ export class PageFaves {
             ? store.getItem(this.opts.lastSyncKey)
             : this.state.store.get(this.opts.lastSyncKey)
         ) || 0
-    } catch {}
+    } catch (err) {
+      console.error('Ping failed', err)
+    }
     if (Date.now() - last < this.opts.syncMinIntervalMs) return
     await this.syncFromServer()
   }

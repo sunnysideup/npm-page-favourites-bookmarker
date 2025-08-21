@@ -50,14 +50,15 @@ export const defaultTemplates = {
     close.addEventListener('click', onClose)
 
     // Logged-out UI: explanation + login link
-    if (isLoggedIn && !isLoggedIn()) {
+    if (isLoggedIn && !isLoggedIn() && loginUrl) {
+      alert(loginUrl)
       const expl = document.createElement('span')
       expl.className = 'pf-expl'
       expl.textContent = ''
 
       const login = document.createElement('a')
       login.className = 'pf-btn pf-login'
-      login.href = loginUrl || '/account/login'
+      login.href = loginUrl
       login.textContent = 'Login / Create account to save'
 
       bar.append(title, expl, login, close)

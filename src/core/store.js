@@ -41,7 +41,9 @@ class LocalStore {
   set (k, v) {
     try {
       this.backend.setItem(k, v)
-    } catch {}
+    } catch (e) {
+      console.error('Failed to set item in LocalStore', e)
+    }
   }
   getJSON (k) {
     try {
@@ -59,14 +61,18 @@ class LocalStore {
 export class Store {
   /**
    * @param {'local'|'session'} mode
+   * @param String nameOfStore
    */
-  constructor (mode = 'local') {
+  constructor (mode = 'local', nameOfStore = 'pf_store') {
     this.mode = mode
+    this.nameOfStore = nameOfStore
     this.primary = this.#detectPrimary(mode)
     this.fallback = new CookieStore()
     // realtime cross-tab updates
     this.channel =
-      'BroadcastChannel' in window ? new BroadcastChannel('pf-store') : null
+      'BroadcastChannel' in window
+        ? new BroadcastChannel(this.nameOfStore)
+        : null
     this.listeners = new Set()
 
     window.addEventListener('storage', e => {
@@ -74,7 +80,8 @@ export class Store {
       this.#emit(e.key)
     })
     this.channel?.addEventListener('message', e => {
-      if (e?.data?.type === 'pf-store-changed') this.#emit(e.data.key)
+      if (e?.data?.type === this.nameOfStore + '-changed')
+        this.#emit(e.data.key)
     })
   }
 
@@ -82,6 +89,25 @@ export class Store {
     this.listeners.add(fn)
     return () => this.listeners.delete(fn)
   }
+
+  getSharedData () {
+    if (localStorage.getItem('pf-store-updated-bookmark-list')) {
+      const sharedStore = new LocalStore('local')
+      return (sharedBookmarks = sharedStore.getJSON(
+        'pf-store-updated-bookmark-list'
+      ))
+    }
+    return null
+  }
+
+  clearSharedData () {
+    if (localStorage.getItem('pf-store-updated-bookmark-list')) {
+      localStorage.removeItem('pf-store-updated-bookmark-list')
+      return true
+    }
+    return false
+  }
+
   #emit (key) {
     this.listeners.forEach(fn => fn(key))
   }
@@ -90,10 +116,11 @@ export class Store {
     const v = this.primary.get(k)
     return v != null ? v : this.mode === 'local' ? this.fallback.get(k) : null
   }
+
   set (k, v) {
     this.primary.set(k, v)
     if (this.mode === 'local') this.fallback.set(k, v) // keep a tiny mirror if you want server access; remove if not needed
-    this.channel?.postMessage({ type: 'pf-store-changed', key: k })
+    this.channel?.postMessage({ type: this.nameOfStore + '-changed', key: k })
     this.#emit(k)
   }
   getJSON (k) {
@@ -107,18 +134,20 @@ export class Store {
   setJSON (k, v) {
     this.primary.setJSON(k, v)
     if (this.mode === 'local') this.fallback.setJSON(k, v)
-    this.channel?.postMessage({ type: 'pf-store-changed', key: k })
+    this.channel?.postMessage({ type: this.nameOfStore + '-changed', key: k })
     this.#emit(k)
   }
 
   #detectPrimary (mode) {
     try {
-      const test = `__pf_test_${Math.random().toString(36).slice(2)}`
-      const s = new LocalStore(mode)
-      s.set(test, '1')
-      if (s.get(test) !== '1') throw new Error('ls blocked')
-      s.set(test, '')
-      return s
+      const test = `__${this.nameOfStore}_${Math.random()
+        .toString(36)
+        .slice(2)}`
+      const myLocalStore = new LocalStore(mode)
+      myLocalStore.set(test, '1')
+      if (myLocalStore.get(test) !== '1') throw new Error('LocalStore blocked')
+      myLocalStore.set(test, '')
+      return myLocalStore
     } catch {
       return new CookieStore()
     }

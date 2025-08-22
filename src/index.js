@@ -6,6 +6,8 @@ import { Heart } from './ui/heart.js'
 import { Overlay } from './ui/overlay.js'
 
 export class PageFaves {
+  isInSync = false
+
   /** @param {object} siteWideOpts */
   constructor (siteWideOpts = {}) {
     const pageConfig =
@@ -21,7 +23,7 @@ export class PageFaves {
       heartPositionTopBottom: 'bottom',
       overlayHotkey: 'KeyB',
       storage: 'local',
-      storageKey: 'pf.bookmarks',
+      storageKey: 'pf_store',
       baseUrl: '',
       endpoints: {
         events: 'events',
@@ -29,13 +31,12 @@ export class PageFaves {
       },
       // NEW: login + throttling
       userIsLoggedIn: false,
-      loginUrl: '/Security/login',
-      syncOnLoad: false,
-      syncMinIntervalMs: 10 * 60 * 1000, // 10 min
-      lastSyncKey: 'pf.lastSync',
+      loginUrl: '',
+      syncOnLoad: false, // do we sync with server at all?
       templates: defaultTemplates,
       currentPageUrl: undefined,
       currentPageTitle: undefined,
+      mergeOnLoad: undefined
     }
 
     // precedence: defaults < siteWideOpts < pageConfig
@@ -86,8 +87,8 @@ export class PageFaves {
       },
       onRequestVerification: () => this.requestVerification?.(),
       onVerifyCode: code => this.verifyCode?.(code),
-      onSync: () => this.syncFromServer().then(() => this.overlay.renderList()),
-      getIdentity: () => this.state.identity,
+      onSync: () => this.syncFromServer(),
+      onShare: () => this.shareFromServer(),
       // NEW: pass login awareness to overlay (for CTA)
       isLoggedIn: () => !!this.opts.userIsLoggedIn,
       loginUrl: this.opts.loginUrl,
@@ -168,7 +169,10 @@ export class PageFaves {
     this.#bindHotkey()
 
     if (this.opts.syncOnLoad && this.opts.userIsLoggedIn) {
-      this.#syncIfStale().catch(() => {})
+      this.#syncIfStale().catch(e => {
+        console.error('Sync failed', e)
+        this.isInSync = false
+      })
     }
 
     this.heart.update()
@@ -229,15 +233,10 @@ export class PageFaves {
     if (!this.#canServer()) return
     const serverList = await this.net.getJSON(this.net.endpoints.bookmarks)
     this.state.mergeFromServer(serverList)
-    // stamp last sync
-    const store = this.state.store ?? window.localStorage
-    try {
-      store.setItem
-        ? store.setItem(this.opts.lastSyncKey, String(Date.now()))
-        : this.state.store.set(this.opts.lastSyncKey, String(Date.now()))
-    } catch (err) {
-      console.error('Ping failed', err)
-    }
+  }
+
+  async shareFromServer () {
+    await this.syncFromServer()
     this.overlay.renderList()
   }
 
@@ -273,7 +272,10 @@ export class PageFaves {
       ) {
         const localCount = await this.getLocalBookmarkCount()
         if (localCount !== data.numberOfBookmarks) {
-          await this.syncFromServer
+          this.isInSync = false
+          await this.syncFromServer()
+        } else {
+          this.isInSync = true
         }
       }
     } catch (err) {
@@ -284,22 +286,8 @@ export class PageFaves {
     return !!this.net?.baseUrl
   }
 
-  // NEW: 10-min throttle
   async #syncIfStale () {
-    if (!this.#canServer()) return
-    const store = this.state.store ?? window.localStorage
-    let last = 0
-    try {
-      last =
-        Number(
-          store.getItem
-            ? store.getItem(this.opts.lastSyncKey)
-            : this.state.store.get(this.opts.lastSyncKey)
-        ) || 0
-    } catch (err) {
-      console.error('Ping failed', err)
-    }
-    if (Date.now() - last < this.opts.syncMinIntervalMs) return
+    if (this.state.isInSync === true) return
     await this.syncFromServer()
   }
 }

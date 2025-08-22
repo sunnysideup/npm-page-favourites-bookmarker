@@ -5,12 +5,8 @@ export class Overlay {
    *   onRemove:(url:string)=>void,
    *   onReorder:(from:number,to:number)=>void,
    *   onClose:()=>void,
-   *   onSaveIdentity:(id:{email:string,phone:string})=>void,
-   *   onRequestVerification:()=>Promise<void>,
-   *   onVerifyCode:(code:string)=>Promise<boolean>,
    *   onSync:()=>Promise<void>,
-   *   getIdentity:()=>({email?:string,phone?:string}|null),
-   *   // NEW (optional)
+   *   onShare:()=>Promise<void>,
    *   isLoggedIn?: ()=>boolean,
    *   loginUrl?: string,
    *   templates:{
@@ -38,14 +34,11 @@ export class Overlay {
     const { wrap, list } = this.opts.templates.overlayShell()
     const bar = this.opts.templates.overlayBar({
       onClose: () => this.opts.onClose(),
-      onSaveIdentity: id => this.opts.onSaveIdentity(id),
-      onRequestVerification: () => this.opts.onRequestVerification(),
-      onVerifyCode: code => this.opts.onVerifyCode(code),
       onSync: () => this.opts.onSync(),
-      identity: this.opts.getIdentity?.(),
-      // NEW: pass login awareness to template
+      onShare: () => this.opts.onShare(),
       isLoggedIn: this.opts.isLoggedIn,
-      loginUrl: this.opts.loginUrl
+      loginUrl: this.opts.loginUrl,
+      shareUrl: this.opts.shareUrl
     })
     wrap.prepend(bar)
     document.body.appendChild(wrap)

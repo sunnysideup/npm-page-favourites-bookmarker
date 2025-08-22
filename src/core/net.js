@@ -19,7 +19,7 @@ export class Net {
     return this.baseUrl ? `${this.baseUrl}/${p}` : p
   }
 
-  async post(pathLike, body) {
+  async post (pathLike, body) {
     if (!this.baseUrl) return { ok: false, data: {} }
 
     const res = await fetch(this.url(pathLike), {
@@ -30,12 +30,19 @@ export class Net {
     })
 
     let data = {}
-    try { data = await res.json() } catch {}
+    try {
+      data = await res.json()
+    } catch (e) {
+      console.error('Failed to parse JSON', e)
+    }
     return { ok: res.status === 200, data }
   }
 
   async getJSON (pathLike) {
     const res = await fetch(this.url(pathLike), { credentials: 'include' })
-    return await res.json().catch(() => ({}))
+    return await res.json().catch(e => {
+      console.error('Failed to parse JSON', e)
+      return {}
+    })
   }
 }

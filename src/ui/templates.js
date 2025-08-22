@@ -65,14 +65,14 @@ export const defaultTemplates = {
       return bar
     }
 
-    // Logged-in UI: sync + close
-    const sync = document.createElement('button')
-    sync.className = 'pf-btn pf-sync'
-    sync.type = 'button'
-    sync.textContent = 'Sync'
-    sync.addEventListener('click', onSync)
+    // Logged-in UI: share + close
+    const share = document.createElement('button')
+    share.className = 'pf-btn pf-share'
+    share.type = 'button'
+    share.textContent = 'share'
+    share.addEventListener('click', onShare)
 
-    bar.append(title, sync, close)
+    bar.append(title, share, close)
     return bar
   },
 

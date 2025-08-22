@@ -141,7 +141,7 @@ No network calls are made unless `baseUrl` is provided.
 
 On `init()`, if `syncOnLoad` is true and `userIsLoggedIn` is true, the client pulls bookmarks from {bookmarks} and merges with local.
 
-This initial pull is throttled to at most once every 10 minutes.
+This initial pull is run whenever the number of bookmarks on the server is not the same as the local ones. 
 
 Every add/remove/reorder triggers a POST {events}.
 

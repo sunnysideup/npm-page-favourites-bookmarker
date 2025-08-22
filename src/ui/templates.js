@@ -33,13 +33,52 @@ export const defaultTemplates = {
     return wrap
   },
 
-  overlayBar: ({ onClose, onSync, isLoggedIn, loginUrl }) => {
+  overlayBar: ({
+    onClose,
+    onSync,
+    onShare,
+    isLoggedIn,
+    loginUrl,
+    shareUrl
+  }) => {
     const bar = document.createElement('div')
     bar.className = 'pf-bar'
 
+    // title
     const title = document.createElement('strong')
     title.className = 'pf-title'
     title.textContent = 'Bookmarks'
+    bar.appendChild(title)
+
+    // login call to action
+    if (!isLoggedIn && loginUrl) {
+      const login = document.createElement('a')
+      login.className = 'pf-btn pf-login'
+      login.href = loginUrl
+      login.textContent = 'Login / Create account to save'
+
+      bar.append(login)
+    }
+
+    // sync button
+    const sync = document.createElement('button')
+    sync.className = 'pf-btn pf-sync'
+    sync.type = 'button'
+    sync.textContent = 'Sync'
+    sync.addEventListener('click', onSync)
+    sync.title = 'Sync with server'
+    sync.setAttribute('aria-label', 'Sync with server')
+    bar.append(sync)
+
+    // share button
+    if (shareUrl) {
+      const share = document.createElement('button')
+      share.className = 'pf-btn pf-share'
+      share.type = 'button'
+      share.textContent = 'share'
+      share.addEventListener('click', onShare)
+      bar.append(share)
+    }
 
     // universal close button
     const close = document.createElement('button')
@@ -48,31 +87,9 @@ export const defaultTemplates = {
     close.textContent = '×'
     close.title = 'Close'
     close.addEventListener('click', onClose)
-
-    // Logged-out UI: explanation + login link
-    if (isLoggedIn && !isLoggedIn() && loginUrl) {
-      alert(loginUrl)
-      const expl = document.createElement('span')
-      expl.className = 'pf-expl'
-      expl.textContent = ''
-
-      const login = document.createElement('a')
-      login.className = 'pf-btn pf-login'
-      login.href = loginUrl
-      login.textContent = 'Login / Create account to save'
-
-      bar.append(title, expl, login, close)
-      return bar
-    }
-
-    // Logged-in UI: share + close
-    const share = document.createElement('button')
-    share.className = 'pf-btn pf-share'
-    share.type = 'button'
-    share.textContent = 'share'
-    share.addEventListener('click', onShare)
-
-    bar.append(title, share, close)
+    bar.appendChild(close)
+    close.setAttribute('aria-label', 'Close bookmarks list')
+    //
     return bar
   },
 

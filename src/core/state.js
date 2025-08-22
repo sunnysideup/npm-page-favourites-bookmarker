@@ -10,9 +10,11 @@ export class State {
     this.store = new Store(opts.storage, opts.storageKey) // use caller's choice
     this.bookmarkStorageKey = opts.storageKey + '_bookmarks'
     this.codeStorageKey = opts.storageKey + '_code'
+    this.shareLinkStorageKey = opts.storageKey + '_share_link'
     // initial load
     this.bookmarks = this.store.getJSON(this.bookmarkStorageKey) || []
-    this.code = this.store.get(codeStorageKey) || makeAlphaNumCode(12)
+    this.code = this.store.get(this.codeStorageKey) || makeAlphaNumCode(12)
+    this.shareLink = this.store.get(this.shareLinkStorageKey) || ''
     this.listeners = new Set()
 
     // cross-tab / external updates
@@ -74,9 +76,37 @@ export class State {
     this.persist()
   }
 
+  setCodeAndShareLink (data) {
+    this.setCode(data.code || '')
+    this.setShareLink(data.shareLink || '')
+  }
+
+  setCode (code) {
+    if (typeof code !== 'string' || !code.trim()) {
+      if (!this.code) {
+        this.code = makeAlphaNumCode(12)
+      }
+    } else {
+      this.code = code.trim()
+    }
+    this.store.set(this.codeStorageKey, this.code)
+  }
+
+  setShareLink (link) {
+    if (typeof link !== 'string' || !link.trim()) {
+      if (!this.shareLink) {
+        this.shareLink = ''
+      }
+    } else {
+      this.shareLink = link.trim()
+    }
+    this.store.set(this.shareLinkStorageKey, this.shareLink)
+  }
+
   persist () {
     this.store.setJSON(this.bookmarkStorageKey, this.bookmarks)
     this.store.set(this.codeStorageKey, this.code)
+    this.store.set(this.shareLinkStorageKey, this.shareLink)
     this.#emit()
   }
 

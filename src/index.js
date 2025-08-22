@@ -90,7 +90,7 @@ export class PageFaves {
       onRequestVerification: () => this.requestVerification?.(),
       onVerifyCode: code => this.verifyCode?.(code),
       onSync: () => this.syncFromServer(),
-      onShare: () => this.shareFromServer(),
+      onShare: () => this.copyShareLink(),
       // NEW: pass login awareness to overlay (for CTA)
       isLoggedIn: () => !!this.opts.userIsLoggedIn,
       loginUrl: this.opts.loginUrl,
@@ -231,14 +231,53 @@ export class PageFaves {
     return ok
   }
 
+  async #ping (type, payload) {
+    if (!this.#canServer()) return
+    try {
+      const { ok, data } = await this.net.post(this.net.endpoints.events, {
+        code: this.state.code,
+        type,
+        payload,
+        at: Date.now()
+      })
+
+      if (ok && data?.status === 'success') {
+        await this.store.setCodeAndShareLink(data)
+        const localCount = await this.getLocalBookmarkCount()
+        if (localCount !== data.numberOfBookmarks) {
+          this.isInSync = false
+          await this.syncFromServer()
+        } else {
+          this.isInSync = true
+        }
+      }
+    } catch (err) {
+      console.error('Ping failed', err)
+    }
+  }
+
   async syncFromServer () {
     if (!this.#canServer()) return
-    const serverList = await this.net.getJSON(
-      this.net.endpoints.bookmarks,
-      this.state.code,
-      this.state.list()
-    )
-    this.state.mergeFromServer(serverList)
+    const { ok, data } = await this.net.post(this.net.endpoints.bookmarks, {
+      code: this.state.code,
+      bookmarks: this.state.list()
+    })
+    if (ok && data?.status === 'success') {
+      await this.store.setCodeAndShareLink(data)
+      this.state.mergeFromServer(data)
+    }
+  }
+
+  async copyShareLink () {
+    const link = this.state.shareLink
+    if (!link) return false
+    try {
+      await navigator.clipboard.writeText(link)
+      return true
+    } catch (err) {
+      console.error('Failed to copy share link', err)
+      return false
+    }
   }
 
   async shareFromServer () {
@@ -262,33 +301,6 @@ export class PageFaves {
     })
   }
 
-  async #ping (type, payload) {
-    if (!this.#canServer()) return
-    try {
-      const { ok, data } = await this.net.post(this.net.endpoints.events, {
-        code: this.state.code,
-        type,
-        payload,
-        at: Date.now()
-      })
-
-      if (
-        ok &&
-        data?.status === 'success' &&
-        Number.isInteger(data.numberOfBookmarks)
-      ) {
-        const localCount = await this.getLocalBookmarkCount()
-        if (localCount !== data.numberOfBookmarks) {
-          this.isInSync = false
-          await this.syncFromServer()
-        } else {
-          this.isInSync = true
-        }
-      }
-    } catch (err) {
-      console.error('Ping failed', err)
-    }
-  }
   #canServer () {
     return !!this.net?.baseUrl
   }

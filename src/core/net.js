@@ -25,7 +25,6 @@ export class Net {
     const res = await fetch(this.url(pathLike), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
       body: JSON.stringify(body)
     })
 
@@ -36,13 +35,5 @@ export class Net {
       console.error('Failed to parse JSON', e)
     }
     return { ok: res.status === 200, data }
-  }
-
-  async getJSON (pathLike, code) {
-    const res = await fetch(this.url(pathLike), { code })
-    return await res.json().catch(e => {
-      console.error('Failed to parse JSON', e)
-      return {}
-    })
   }
 }

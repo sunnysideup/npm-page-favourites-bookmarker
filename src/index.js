@@ -24,6 +24,7 @@ export class PageFaves {
       overlayHotkey: 'KeyB',
       storage: 'local',
       storageKey: 'pf_store',
+      nameOfTemporarySharedStore: 'pf_store_share_bookmark_list',
       baseUrl: '',
       endpoints: {
         events: 'events',
@@ -49,7 +50,8 @@ export class PageFaves {
 
     this.state = new State({
       storage: this.opts.storage,
-      storageKey: this.opts.storageKey
+      storageKey: this.opts.storageKey,
+      nameOfTemporarySharedStore: this.opts.nameOfTemporarySharedStore
     })
     this.net = new Net({
       baseUrl: this.opts.baseUrl,
@@ -231,7 +233,11 @@ export class PageFaves {
 
   async syncFromServer () {
     if (!this.#canServer()) return
-    const serverList = await this.net.getJSON(this.net.endpoints.bookmarks)
+    const serverList = await this.net.getJSON(
+      this.net.endpoints.bookmarks,
+      this.state.code,
+      this.state.list()
+    )
     this.state.mergeFromServer(serverList)
   }
 
@@ -260,6 +266,7 @@ export class PageFaves {
     if (!this.#canServer()) return
     try {
       const { ok, data } = await this.net.post(this.net.endpoints.events, {
+        code: this.state.code,
         type,
         payload,
         at: Date.now()

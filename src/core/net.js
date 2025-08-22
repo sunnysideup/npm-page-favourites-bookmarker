@@ -38,8 +38,8 @@ export class Net {
     return { ok: res.status === 200, data }
   }
 
-  async getJSON (pathLike) {
-    const res = await fetch(this.url(pathLike), { credentials: 'include' })
+  async getJSON (pathLike, code) {
+    const res = await fetch(this.url(pathLike), { code })
     return await res.json().catch(e => {
       console.error('Failed to parse JSON', e)
       return {}

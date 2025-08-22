@@ -62,10 +62,16 @@ export class Store {
   /**
    * @param {'local'|'session'} mode
    * @param String nameOfStore
+   * @param String nameOfTemporarySharedStore
    */
-  constructor (mode = 'local', nameOfStore = 'pf_store') {
+  constructor (
+    mode = 'local',
+    nameOfStore = 'pf_store',
+    nameOfTemporarySharedStore = 'pf_store_share_bookmark_list'
+  ) {
     this.mode = mode
     this.nameOfStore = nameOfStore
+    this.nameOfTemporarySharedStore = nameOfTemporarySharedStore
     this.primary = this.#detectPrimary(mode)
     this.fallback = new CookieStore()
     // realtime cross-tab updates
@@ -90,19 +96,19 @@ export class Store {
     return () => this.listeners.delete(fn)
   }
 
-  getSharedData () {
-    if (localStorage.getItem('pf-store-updated-bookmark-list')) {
+  getTemporarySharedData () {
+    if (localStorage.getItem(this.nameOfTemporarySharedStore)) {
       const sharedStore = new LocalStore('local')
       return (sharedBookmarks = sharedStore.getJSON(
-        'pf-store-updated-bookmark-list'
+        this.nameOfTemporarySharedStore
       ))
     }
     return null
   }
 
-  clearSharedData () {
-    if (localStorage.getItem('pf-store-updated-bookmark-list')) {
-      localStorage.removeItem('pf-store-updated-bookmark-list')
+  removeTemporarySharedData () {
+    if (localStorage.getItem(this.nameOfTemporarySharedStore)) {
+      localStorage.removeItem(this.nameOfTemporarySharedStore)
       return true
     }
     return false

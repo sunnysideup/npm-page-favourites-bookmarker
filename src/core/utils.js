@@ -15,3 +15,16 @@ export function deepMerge (...sources) {
   }
   return out
 }
+
+export function makeAlphaNumCode (length = 12) {
+  const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  const charLen = chars.length
+  let result = ''
+
+  for (let i = 0; i < length; i++) {
+    const idx = Math.floor(Math.random() * charLen)
+    result += chars[idx]
+  }
+
+  return result
+}

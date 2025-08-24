@@ -99,9 +99,12 @@ export class Store {
   getTemporarySharedData () {
     if (localStorage.getItem(this.nameOfTemporarySharedStore)) {
       const sharedStore = new LocalStore('local')
-      return (sharedBookmarks = sharedStore.getJSON(
+      const sharedBookmarks = sharedStore.getJSON(
         this.nameOfTemporarySharedStore
-      ))
+      )
+      if (sharedBookmarks) {
+        return sharedBookmarks
+      }
     }
     return null
   }

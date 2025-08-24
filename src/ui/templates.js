@@ -87,8 +87,8 @@ export const defaultTemplates = {
     close.textContent = '×'
     close.title = 'Close'
     close.addEventListener('click', onClose)
-    bar.appendChild(close)
     close.setAttribute('aria-label', 'Close bookmarks list')
+    bar.appendChild(close)
     //
     return bar
   },

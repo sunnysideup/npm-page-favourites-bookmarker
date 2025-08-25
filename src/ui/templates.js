@@ -39,7 +39,7 @@ export const defaultTemplates = {
     onShare,
     isLoggedIn,
     loginUrl,
-    shareUrl
+    shareLink
   }) => {
     const bar = document.createElement('div')
     bar.className = 'pf-bar'
@@ -51,31 +51,32 @@ export const defaultTemplates = {
     bar.appendChild(title)
 
     // login call to action
-    if (!isLoggedIn && loginUrl) {
+    console.log('loginUrl', loginUrl)
+    if (loginUrl) {
       const login = document.createElement('a')
       login.className = 'pf-btn pf-login'
       login.href = loginUrl
-      login.textContent = 'Login / Create account to save'
+      login.textContent = 'log-in / create account to save'
 
       bar.append(login)
     }
 
     // sync button
-    const sync = document.createElement('button')
-    sync.className = 'pf-btn pf-sync'
-    sync.type = 'button'
-    sync.textContent = 'Sync'
-    sync.addEventListener('click', onSync)
-    sync.title = 'Sync with server'
-    sync.setAttribute('aria-label', 'Sync with server')
-    bar.append(sync)
+    // const sync = document.createElement('button')
+    // sync.className = 'pf-btn pf-sync'
+    // sync.type = 'button'
+    // sync.textContent = 'Sync'
+    // sync.addEventListener('click', onSync)
+    // sync.title = 'Sync with server'
+    // sync.setAttribute('aria-label', 'Sync with server')
+    // bar.append(sync)
 
     // share button
-    if (shareUrl) {
+    if (shareLink) {
       const share = document.createElement('button')
       share.className = 'pf-btn pf-share'
       share.type = 'button'
-      share.textContent = 'share'
+      share.textContent = 'Copy link to share'
       share.addEventListener('click', onShare)
       bar.append(share)
     }

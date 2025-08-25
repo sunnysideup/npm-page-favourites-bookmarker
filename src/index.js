@@ -1,10 +1,11 @@
-import { deepMerge } from './core/utils.js'
 import { State } from './core/state.js'
 import { Net } from './core/net.js'
 import { defaultTemplates } from './ui/templates.js'
 import { Heart } from './ui/heart.js'
 import { Overlay } from './ui/overlay.js'
 
+import { deepMerge } from './core/utils.js'
+import { makeAbsoluteUrl } from './core/utils.js'
 export class PageFaves {
   isInSync = false
 
@@ -84,16 +85,12 @@ export class PageFaves {
         this.overlay.renderList()
       },
       onClose: () => this.hideOverlay(),
-      onSaveIdentity: id => {
-        this.saveIdentity?.(id)
-      },
-      onRequestVerification: () => this.requestVerification?.(),
-      onVerifyCode: code => this.verifyCode?.(code),
       onSync: () => this.syncFromServer(),
       onShare: () => this.copyShareLink(),
       // NEW: pass login awareness to overlay (for CTA)
       isLoggedIn: () => !!this.opts.userIsLoggedIn,
       loginUrl: this.opts.loginUrl,
+      shareLink: this.state.getShareLink(),
       templates: {
         overlayBar: this.opts.templates.overlayBar,
         overlayShell: this.opts.templates.overlayShell,
@@ -104,6 +101,10 @@ export class PageFaves {
     this.unsubscribe = this.state.onChange(() => {
       this.heart.update()
     })
+
+    if (this.state.mergeFromShareIfAvailable()) {
+      this.showOverlay()
+    }
   }
 
   #started = false
@@ -242,7 +243,7 @@ export class PageFaves {
       })
 
       if (ok && data?.status === 'success') {
-        await this.store.setCodeAndShareLink(data)
+        await this.state.setCodeAndShareLink(data)
         const localCount = await this.getLocalBookmarkCount()
         if (localCount !== data.numberOfBookmarks) {
           this.isInSync = false
@@ -263,21 +264,27 @@ export class PageFaves {
       bookmarks: this.state.list()
     })
     if (ok && data?.status === 'success') {
-      await this.store.setCodeAndShareLink(data)
+      await this.state.setCodeAndShareLink(data)
       this.state.mergeFromServer(data)
     }
   }
 
   async copyShareLink () {
-    const link = this.state.shareLink
+    let link = this.state.getShareLink()
     if (!link) return false
-    try {
-      await navigator.clipboard.writeText(link)
-      return true
-    } catch (err) {
-      console.error('Failed to copy share link', err)
-      return false
+    link = makeAbsoluteUrl(link)
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(link)
+    } else {
+      const textarea = document.createElement('textarea')
+      textarea.value = link
+      document.body.appendChild(textarea)
+      textarea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textarea)
+      return Promise.resolve()
     }
+    alert('The share link has been copied to your clipboard.')
   }
 
   async shareFromServer () {

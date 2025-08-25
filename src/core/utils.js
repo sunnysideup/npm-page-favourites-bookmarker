@@ -28,3 +28,7 @@ export function makeAlphaNumCode (length = 12) {
 
   return result
 }
+
+export const makeAbsoluteUrl = relativeUrl => {
+  return new URL(relativeUrl, window.location.origin).href
+}

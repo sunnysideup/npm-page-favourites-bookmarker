@@ -30,7 +30,6 @@ export class State {
 
       if (changed) this.#emit()
     })
-    this.mergeFromShareIfAvailable()
   }
 
   onChange (fn) {
@@ -103,6 +102,14 @@ export class State {
     this.store.set(this.shareLinkStorageKey, this.shareLink)
   }
 
+  getCode () {
+    return this.code || this.store.get(this.codeStorageKey)
+  }
+
+  getShareLink () {
+    return this.shareLink || this.store.get(this.shareLinkStorageKey)
+  }
+
   persist () {
     this.store.setJSON(this.bookmarkStorageKey, this.bookmarks)
     this.store.set(this.codeStorageKey, this.code)
@@ -115,7 +122,9 @@ export class State {
     if (sharedBookmarks) {
       this.mergeFromServer(sharedBookmarks, true)
       this.store.removeTemporarySharedData()
+      return true
     }
+    return false
   }
 
   mergeFromServer (serverList = {}, fullReplace = false) {

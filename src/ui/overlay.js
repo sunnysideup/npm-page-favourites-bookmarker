@@ -38,7 +38,7 @@ export class Overlay {
       onShare: () => this.opts.onShare(),
       isLoggedIn: this.opts.isLoggedIn,
       loginUrl: this.opts.loginUrl,
-      shareUrl: this.opts.shareUrl
+      shareLink: this.opts.shareLink
     })
     wrap.prepend(bar)
     document.body.appendChild(wrap)

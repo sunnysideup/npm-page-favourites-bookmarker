@@ -71,7 +71,7 @@ Add a small script before you import/initialise:
 
 ```html
 <script>
-  window.npmPageFavouritesBookmarker = {
+  window.npmPageFavouritesBookmarkerConfig = {
     // whether to render on this page (overrides defaults and constructor opts)
     loadOnThisPage: true,
     // login awareness for overlay
@@ -84,6 +84,28 @@ Add a small script before you import/initialise:
 </script>
 
 ```
+
+### Adding snippets directly to your page
+
+If the following class `pf-heart-for-current-page` is present on the page then the heart will be added in this holder
+and not as per usual as an "floating" heart.
+
+```html
+
+<div class="pf-heart-for-current-page"></div>
+
+```
+
+You can also add "add to favourites" to other pages on the page (e.g. when you hvae a list of links to other pages).
+
+This can be done as follows:
+
+```html
+
+<div class="pf-heart-for-another-page" data-pf-url="..." data-pf-title="..." data-pf-description="..." data-pf-imagelink="..." ></div>
+
+```
+
 
 ### Customising templates (optional)
 
@@ -150,7 +172,7 @@ Every add/remove/reorder triggers a POST {events}.
 
 ### Bookmark methods
 
-- `add(url, title)` → add a bookmark
+- `add(url, title, imagelink, description)` → add a bookmark
 - `remove(url)` → remove bookmark
 - `toggleCurrent()` → toggle current page
 - `list()` → get all bookmarks

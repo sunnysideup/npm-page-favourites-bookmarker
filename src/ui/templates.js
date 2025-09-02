@@ -2,12 +2,14 @@ export const defaultTemplates = {
   heart: ({ onClick, onShowOverlay, position, isOn, hasBookmarks }) => {
     const wrap = document.createElement('div')
     wrap.className = 'pf-heart-wrap'
-    wrap.classList.add(
-      `pf-heart-wrap--${position.leftRight === 'left' ? 'left' : 'right'}`
-    )
-    wrap.classList.add(
-      `pf-heart-wrap--${position.topBottom === 'top' ? 'top' : 'bottom'}`
-    )
+    if(position) {
+      wrap.classList.add(
+        `pf-heart-wrap--${position.leftRight === 'left' ? 'left' : 'right'}`
+      )
+      wrap.classList.add(
+        `pf-heart-wrap--${position.topBottom === 'top' ? 'top' : 'bottom'}`
+      )
+    }
 
     const showBtn = document.createElement('button')
     showBtn.className = 'pf-show-bookmarks'
@@ -103,42 +105,65 @@ export const defaultTemplates = {
     return { wrap, list }
   },
 
-  overlayRow: ({ item, index, onRemove, onReorder }) => {
-    const row = document.createElement('div')
-    row.className = 'pf-row'
-    row.draggable = true
+overlayRow: ({ item, index, onRemove, onReorder }) => {
+  const row = document.createElement('div')
+  row.className = 'pf-row'
+  row.draggable = true
 
-    const drag = document.createElement('span')
-    drag.className = 'pf-sort'
-    drag.title = 'Drag'
-    drag.textContent = '⋮'
+  const drag = document.createElement('span')
+  drag.className = 'pf-sort'
+  drag.title = 'Drag'
+  drag.textContent = '⋮'
 
-    const a = document.createElement('a')
-    a.className = 'pf-link'
-    a.href = item.url
-    a.target = '_blank'
-    a.rel = 'noopener'
-    a.textContent = item.title || item.url
+  const a = document.createElement('a')
+  a.className = 'pf-link'
+  a.href = item.url
+  a.target = '_blank'
+  a.rel = 'noopener'
+  a.textContent = item.title || item.url
 
-    const del = document.createElement('button')
-    del.className = 'pf-btn pf-del'
-    del.type = 'button'
-    del.textContent = '×'
-    del.addEventListener('click', () => onRemove(item.url))
+  const del = document.createElement('button')
+  del.className = 'pf-btn pf-del'
+  del.type = 'button'
+  del.textContent = '×'
+  del.addEventListener('click', () => onRemove(item.url))
 
-    row.append(drag, a, del)
-
-    row.addEventListener('dragstart', e => {
-      e.dataTransfer.setData('text/plain', String(index))
-    })
-    row.addEventListener('dragover', e => e.preventDefault())
-    row.addEventListener('drop', e => {
-      e.preventDefault()
-      const from = Number(e.dataTransfer.getData('text/plain'))
-      const to = index
-      onReorder(from, to)
-    })
-
-    return row
+  // optional image
+  let img
+  if (item.imagelink) {
+    img = document.createElement('img')
+    img.src = item.imagelink
+    img.alt = item.title || ''
+    img.height = 50
+    img.loading = 'lazy'
   }
-}
+
+  // optional description
+  let p
+  if (item.description) {
+    p = document.createElement('p')
+    p.textContent = item.description
+  }
+
+  // build
+  row.append(
+    drag,
+    ...(img ? [img] : []),
+    a,
+    ...(p ? [p] : []),
+    del
+  )
+
+  row.addEventListener('dragstart', e => {
+    e.dataTransfer.setData('text/plain', String(index))
+  })
+  row.addEventListener('dragover', e => e.preventDefault())
+  row.addEventListener('drop', e => {
+    e.preventDefault()
+    const from = Number(e.dataTransfer.getData('text/plain'))
+    const to = index
+    onReorder(from, to)
+  })
+
+  return row
+}}

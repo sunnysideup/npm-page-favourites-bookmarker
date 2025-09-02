@@ -1,37 +1,40 @@
 {
-    "name": "@sunnysideup/npm-page-favourites-bookmarker",
-    "description": "NPM package - to bookmark / favourite any page on a website",
-    "type": "module",
-    "module": "./src/index.js",
-    "main": "./src/index.js",
-    "exports": {
-        ".": {
-            "import": "./src/index.js",
-            "default": "./src/index.js"
-        },
-        "./styles": "./src/index.scss"
+  "name": "@sunnysideup/npm-page-favourites-bookmarker",
+  "description": "NPM package - to bookmark / favourite any page on a website",
+  "type": "module",
+  "module": "./src/index.js",
+  "main": "./src/index.js",
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "default": "./src/index.js"
     },
-    "style": "src/index.scss",
-    "sideEffects": false,
-    "files": [
-        "src/"
-    ],
-    "license": "MIT",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/sunnysideup/npm-page-favourites-bookmarker.git"
-    },
-    "keywords": [
-        "bookmark",
-        "favourite",
-        "favorite",
-        "heart",
-        "page",
-        "bookmarking",
-        "favouriting",
-        "favourites"
-    ],
-    "scripts": {},
-    "author": "npm@sunnysideup.co.nz",
-    "version": "0.1.0"
+    "./styles": "./src/index.scss"
+  },
+  "style": "src/index.scss",
+  "sideEffects": false,
+  "files": [
+    "src/"
+  ],
+  "dependencies": {
+    "dompurify": "^3.2"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sunnysideup/npm-page-favourites-bookmarker.git"
+  },
+  "keywords": [
+    "bookmark",
+    "favourite",
+    "favorite",
+    "heart",
+    "page",
+    "bookmarking",
+    "favouriting",
+    "favourites"
+  ],
+  "scripts": {},
+  "author": "npm@sunnysideup.co.nz",
+  "version": "0.1.0"
 }

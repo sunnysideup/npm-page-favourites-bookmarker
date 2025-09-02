@@ -1,5 +1,7 @@
+import DOMPurify from 'dompurify'
 import { Store } from './store.js'
 import { makeAlphaNumCode } from './utils.js'
+
 
 export class State {
   /**
@@ -47,11 +49,19 @@ export class State {
     return this.bookmarks.some(b => b.url === url)
   }
 
-  add (url, title) {
+  add (url, title, imagelink, description) {
     if (this.has(url)) return false
-    const newTitle = this.#testUrlAndTitle(url, title)
+    const { newTitle, newImageLink, newDescription } = this.#testUrlAndTitle(url, title, imagelink, description)
     if (!newTitle) return false // skip invalid entries
-    this.bookmarks.push({ url, title: newTitle, ts: Date.now() })
+    this.bookmarks.push(
+      {
+        url,
+        title: newTitle,
+        imagelink: newImageLink,
+        description: newDescription,
+        ts: Date.now()
+      }
+    )
     this.persist()
     return true
   }
@@ -138,12 +148,14 @@ export class State {
       : new Map(this.bookmarks.map(b => [b.url, b]))
 
     if (Array.isArray(serverList.bookmarks)) {
-      for (const { url, title, ts } of serverList.bookmarks) {
-        const newTitle = this.#testUrlAndTitle(url, title)
+      for (const { url, title, imagelink, description, ts } of serverList.bookmarks) {
+        const { newTitle, newImageLink, newDescription } = this.#testUrlAndTitle({ url, title, imagelink, description })
         if (!newTitle) continue
         map.set(url, {
           url,
           title: newTitle,
+          imagelink: newImageLink,
+          description: newDescription,
           ts: Number.isFinite(ts) ? ts : Date.now()
         })
       }
@@ -154,19 +166,31 @@ export class State {
     this.bookmarks = [...map.values()]
     this.persist()
   }
-  #testUrlAndTitle (url, title) {
-    const newTitle = this.#sanitizeHtml(title || '')
-    if (this.#isValidUrl(url) && newTitle) return newTitle
-    return ''
+
+  #testUrlAndTitle ({ url = '', title = '', imagelink = '', description = '' } = {}) {
+    if (this.#isValidUrl(url)) {
+      const newTitle = this.#sanitizeHtml(title)
+      if(newTitle) {
+        const newImageLink = this.#isValidUrl(imagelink) ? imagelink : ''
+        const newDescription = this.#sanitizeHtml(description)
+        return { newTitle, newImageLink, newDescription }
+      }
+    }
+
+    return {}
   }
+
   #sanitizeHtml (str) {
-    return str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;')
+    // https://github.com/cure53/DOMPurify/tree/main/demos#what-is-this
+    return DOMPurify.sanitize(str)
+    // return str
+    //   .replace(/&/g, '&amp;')
+    //   .replace(/</g, '&lt;')
+    //   .replace(/>/g, '&gt;')
+    //   .replace(/"/g, '&quot;')
+    //   .replace(/'/g, '&#39;')
   }
+
   #isValidUrl (string) {
     try {
       new URL(string)

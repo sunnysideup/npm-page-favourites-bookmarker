@@ -23,18 +23,20 @@ export class Heart {
    */
   constructor (opts) {
     this.opts = opts
-    this.el = null
+    this.mainHeartOnPage = null
+    this.appendTo = null
   }
+
   mount () {
-    if (this.el) return
-    this.el = this.opts.template({
+    if (this.mainHeartOnPage) return
+    this.mainHeartOnPage = this.opts.template({
       onClick: e => {
         this.opts.onToggle()
         // show helper for ~1s
         const has = this.opts.hasBookmarks()
         if (has) {
-          this.el.classList.add('pf-show-temp')
-          setTimeout(() => this.el?.classList.remove('pf-show-temp'), 2000)
+          this.mainHeartOnPage.classList.add('pf-show-temp')
+          setTimeout(() => this.mainHeartOnPage?.classList.remove('pf-show-temp'), this.opts.heartsLoadingDelay)
         }
       },
       onShowOverlay: this.opts.onShowOverlay,
@@ -42,28 +44,29 @@ export class Heart {
       isOn: this.opts.isOn,
       hasBookmarks: this.opts.hasBookmarks
     })
-    document.body.appendChild(this.el)
+    this.appendTo = this.opts.appendTo
+    this.appendTo.appendChild(this.mainHeartOnPage)
     this.update()
   }
 
   update () {
-    if (!this.el) return
-    const heartBtn = this.el.matches('.pf-heart')
-      ? this.el
-      : this.el.querySelector('.pf-heart')
+    if (!this.mainHeartOnPage) return
+    const heartBtn = this.mainHeartOnPage.matches('.pf-heart')
+      ? this.mainHeartOnPage
+      : this.mainHeartOnPage.querySelector('.pf-heart')
     if (heartBtn) {
       const on = this.opts.isOn()
       heartBtn.classList.toggle('pf-on', on)
       heartBtn.textContent = on ? '❤' : '❤' // ♡
     }
-    const showBtn = this.el.querySelector?.('.pf-show-bookmarks')
+    const showBtn = this.mainHeartOnPage.querySelector?.('.pf-show-bookmarks')
     if (showBtn) {
       const visible = this.opts.hasBookmarks()
       showBtn.style.display = visible ? '' : 'none'
     }
   }
   unmount () {
-    this.el?.remove()
-    this.el = null
+    this.mainHeartOnPage?.remove()
+    this.mainHeartOnPage = null
   }
 }

@@ -2,6 +2,7 @@ import { State } from './core/state.js'
 import { Net } from './core/net.js'
 import { defaultTemplates } from './ui/templates.js'
 import { Heart } from './ui/heart.js'
+import { AttachInlineHearts } from './ui/hearts-inline.js'
 import { Overlay } from './ui/overlay.js'
 
 import { deepMerge } from './core/utils.js'
@@ -12,9 +13,9 @@ export class PageFaves {
   /** @param {object} siteWideOpts */
   constructor (siteWideOpts = {}) {
     const pageConfig =
-      window.npmPageFavouritesBookmarker &&
-      typeof window.npmPageFavouritesBookmarker === 'object'
-        ? window.npmPageFavouritesBookmarker
+      window.npmPageFavouritesBookmarkerConfig &&
+      typeof window.npmPageFavouritesBookmarkerConfig === 'object'
+        ? window.npmPageFavouritesBookmarkerConfig
         : {}
 
     const defaults = {
@@ -38,7 +39,10 @@ export class PageFaves {
       templates: defaultTemplates,
       currentPageUrl: undefined,
       currentPageTitle: undefined,
-      mergeOnLoad: undefined
+      currentPageImagelink: undefined,
+      currentPageDescription: undefined,
+      mergeOnLoad: undefined,
+      selectorForTitle: 'h1'
     }
 
     // precedence: defaults < siteWideOpts < pageConfig
@@ -49,62 +53,35 @@ export class PageFaves {
       typeof loadOnThisPage === 'boolean' ? loadOnThisPage : !!loadByDefault
     if (!this.shouldLoad) return
 
-    this.state = new State({
-      storage: this.opts.storage,
-      storageKey: this.opts.storageKey,
-      nameOfTemporarySharedStore: this.opts.nameOfTemporarySharedStore
-    })
-    this.net = new Net({
-      baseUrl: this.opts.baseUrl,
-      endpoints: this.opts.endpoints
-    })
+    this.#setupState()
+    this.#setupNet()
+    this.#createHearts()
+    this.#createOverlay()
 
-    this.heart = new Heart({
-      position: {
-        leftRight: this.opts.heartPositionLeftRight,
-        topBottom: this.opts.heartPositionTopBottom
-      },
-      isOn: () => this.isBookmarked(),
-      hasBookmarks: () => this.state.list().length > 0,
-      onToggle: () => this.toggleCurrent(),
-      onShowOverlay: () => this.showOverlay(),
-      template: this.opts.templates.heart
-    })
-
-    this.overlay = new Overlay({
-      getList: () => this.state.list(),
-      onRemove: url => {
-        this.remove(url)
-        this.overlay.renderList()
-        this.heart.update()
-      },
-      // CHANGED: ping on reorder too
-      onReorder: (from, to) => {
-        this.state.reorder(from, to)
-        this.#ping('reordered', { from, to })
-        this.overlay.renderList()
-      },
-      onClose: () => this.hideOverlay(),
-      onSync: () => this.syncFromServer(),
-      onShare: () => this.copyShareLink(),
-      // NEW: pass login awareness to overlay (for CTA)
-      isLoggedIn: () => !!this.opts.userIsLoggedIn,
-      loginUrl: this.opts.loginUrl,
-      shareLink: this.state.getShareLink(),
-      templates: {
-        overlayBar: this.opts.templates.overlayBar,
-        overlayShell: this.opts.templates.overlayShell,
-        overlayRow: this.opts.templates.overlayRow
-      }
-    })
 
     this.unsubscribe = this.state.onChange(() => {
-      this.heart.update()
+      this.allHearts.forEach(h => h.update())
     })
+
+
+    if (typeof globalThis !== 'undefined') {
+      const api = {
+        toggleFromElement: this.toggleFromElement,
+        toggleCurrent: this.toggleCurrent,
+        showOverlay: this.showOverlay,
+        hideOverlay: this.hideOverlay,
+        add: this.add,
+        remove: this.remove,
+        isBookmarked: this.isBookmarked,
+        getLocalBookmarkCount: this.getLocalBookmarkCount,
+      }
+      globalThis.npmPageFavouritesBookmarker = Object.freeze({ ...(globalThis.npmPageFavouritesBookmarker ?? {}), ...api })
+    }
 
     if (this.state.mergeFromShareIfAvailable()) {
       this.showOverlay()
     }
+
   }
 
   #started = false
@@ -168,7 +145,7 @@ export class PageFaves {
     if (this.#started) return
     this.#started = true
 
-    this.heart.mount()
+    this.allHearts.forEach(h => h.mount())
     this.#bindHotkey()
 
     if (this.opts.syncOnLoad && this.opts.userIsLoggedIn) {
@@ -178,14 +155,28 @@ export class PageFaves {
       })
     }
 
-    this.heart.update()
+    this.allHearts.forEach(h => h.update())
+  }
+
+  toggleFromElement(el) {
+    const url = el.dataset.pfUrl || el.href || ''
+    if(this.isBookmarked) {
+      return this.remove(url)
+    } else {
+      const title = el.dataset.pfTitle || el.innerText || el.textContent || url || ''
+      const imagelink = el.dataset.pfImagelink || ''
+      const description = el.dataset.pfDescription || ''
+      return this.add(url, title, imagelink, description)
+    }
   }
 
   // Public API
   addCurrent () {
     return this.add(
-      window.location.href,
-      document.title || window.location.href
+      this.opts.currentPageUrl || window.location.href,
+      this.opts.currentPageTitle || document.querySelector(this.opts.selectorForTitle)?.innerText || document.title || window.location.href,
+      this.opts.currentPageImagelink  || document.querySelector('meta[property="og:image"]')?.content || '',
+      this.opts.currentPageDescription || document.querySelector('meta[property="og:description"]')?.content || ''
     )
   }
   removeCurrent () {
@@ -221,9 +212,9 @@ export class PageFaves {
     }
   }
 
-  add (url, title) {
-    const ok = this.state.add(url, title)
-    if (ok) this.#ping('added', { url, title })
+  add (url, title, imagelink = '', description = '') {
+    const ok = this.state.add(url, title, imagelink, description)
+    if (ok) this.#ping('added', { url, title, imagelink, description })
     return ok
   }
   remove (url) {
@@ -315,5 +306,77 @@ export class PageFaves {
   async #syncIfStale () {
     if (this.state.isInSync === true) return
     await this.syncFromServer()
+  }
+
+  #setupState(){
+    this.state = new State({
+      storage: this.opts.storage,
+      storageKey: this.opts.storageKey,
+      nameOfTemporarySharedStore: this.opts.nameOfTemporarySharedStore
+    })
+  }
+
+  #setupNet(){
+    this.net = new Net({
+      baseUrl: this.opts.baseUrl,
+      endpoints: this.opts.endpoints
+    })
+  }
+
+  #createHearts() {
+    this.heart = new Heart({
+      appendTo: document.querySelector('.pf-heart-for-current-page') ?? document.body,
+      position: {
+        leftRight: this.opts.heartPositionLeftRight,
+        topBottom: this.opts.heartPositionTopBottom
+      },
+      isOn: () => this.isBookmarked(),
+      hasBookmarks: () => this.state.list().length > 0,
+      onToggle: () => this.toggleCurrent(),
+      onShowOverlay: () => this.showOverlay(),
+      template: this.opts.templates.heart,
+    })
+
+    this.otherHearts = AttachInlineHearts(
+      {
+        isBookmarked: () => this.isBookmarked(),
+        hasBookmarks: () => this.state.list().length > 0,
+        onToggle: () => this.toggleFromElement(),
+        onShowOverlay: () => this.showOverlay(),
+        template: this.opts.templates.heart,
+      },
+      document
+    )
+
+    this.allHearts = [this.heart, ...(this.otherHearts ?? [])].filter(Boolean)
+  }
+
+  #createOverlay() {
+    this.overlay = new Overlay({
+      getList: () => this.state.list(),
+      onRemove: url => {
+        this.remove(url)
+        this.overlay.renderList()
+        this.allHearts.forEach(h => h.update())
+      },
+      // CHANGED: ping on reorder too
+      onReorder: (from, to) => {
+        this.state.reorder(from, to)
+        this.#ping('reordered', { from, to })
+        this.overlay.renderList()
+      },
+      onClose: () => this.hideOverlay(),
+      onSync: () => this.syncFromServer(),
+      onShare: () => this.copyShareLink(),
+      // NEW: pass login awareness to overlay (for CTA)
+      isLoggedIn: () => !!this.opts.userIsLoggedIn,
+      loginUrl: this.opts.loginUrl,
+      shareLink: this.state.getShareLink(),
+      templates: {
+        overlayBar: this.opts.templates.overlayBar,
+        overlayShell: this.opts.templates.overlayShell,
+        overlayRow: this.opts.templates.overlayRow
+      }
+    })
   }
 }

@@ -1,13 +1,41 @@
 import { State } from './core/state.js'
 import { Net } from './core/net.js'
 import { defaultTemplates } from './ui/templates.js'
-import { Heart } from './ui/heart.js'
 import { AttachInlineHearts } from './ui/hearts-inline.js'
+import { Heart } from './ui/heart.js'
 import { Overlay } from './ui/overlay.js'
+import { deepMerge, makeAbsoluteUrl, normalizeUrl } from './core/utils.js'
 
-import { deepMerge } from './core/utils.js'
-import { makeAbsoluteUrl } from './core/utils.js'
 export class PageFaves {
+
+  static DEFAULTS = {
+    loadByDefault: true, // load on page?
+    loadOnThisPage: undefined, // load on this specific page?
+    heartPositionLeftRight: 'right', // position of heart icon
+    heartPositionTopBottom: 'bottom', // position of heart icon
+    overlayHotkey: 'KeyB', // key used to show / hide overlay
+    heartingHotkey: 'KeyH', // key used to (un)heart the current page
+    storage: 'local', // how to store data
+    storageKey: 'pf_store', // storage key
+    nameOfTemporarySharedStore: 'pf_store_share_bookmark_list',  // name of temporary shared store for sharing data
+    baseUrl: '', // base url for all links
+    endpoints: {
+      events: 'events',
+      bookmarks: 'bookmarks'
+    },
+    // NEW: login + throttling
+    userIsLoggedIn: false,
+    loginUrl: '',
+    syncOnLoad: false, // do we sync with server at all?
+    templates: defaultTemplates,
+    currentPageUrl: undefined,
+    currentPageTitle: undefined,
+    currentPageImagelink: undefined,
+    currentPageDescription: undefined,
+    mergeOnLoad: undefined,
+    selectorForTitle: 'h1'
+  }
+
   isInSync = false
 
   /** @param {object} siteWideOpts */
@@ -18,35 +46,8 @@ export class PageFaves {
         ? window.npmPageFavouritesBookmarkerConfig
         : {}
 
-    const defaults = {
-      loadByDefault: true,
-      loadOnThisPage: undefined,
-      heartPositionLeftRight: 'right',
-      heartPositionTopBottom: 'bottom',
-      overlayHotkey: 'KeyB',
-      storage: 'local',
-      storageKey: 'pf_store',
-      nameOfTemporarySharedStore: 'pf_store_share_bookmark_list',
-      baseUrl: '',
-      endpoints: {
-        events: 'events',
-        bookmarks: 'bookmarks'
-      },
-      // NEW: login + throttling
-      userIsLoggedIn: false,
-      loginUrl: '',
-      syncOnLoad: false, // do we sync with server at all?
-      templates: defaultTemplates,
-      currentPageUrl: undefined,
-      currentPageTitle: undefined,
-      currentPageImagelink: undefined,
-      currentPageDescription: undefined,
-      mergeOnLoad: undefined,
-      selectorForTitle: 'h1'
-    }
-
     // precedence: defaults < siteWideOpts < pageConfig
-    this.opts = deepMerge(defaults, siteWideOpts, pageConfig)
+    this.opts = deepMerge(PageFaves.DEFAULTS, siteWideOpts, pageConfig)
 
     const { loadByDefault, loadOnThisPage } = this.opts
     this.shouldLoad =
@@ -64,30 +65,15 @@ export class PageFaves {
     })
 
 
-    if (typeof globalThis !== 'undefined') {
-      const api = {
-        toggleFromElement: this.toggleFromElement,
-        toggleCurrent: this.toggleCurrent,
-        showOverlay: this.showOverlay,
-        hideOverlay: this.hideOverlay,
-        add: this.add,
-        remove: this.remove,
-        isBookmarked: this.isBookmarked,
-        getLocalBookmarkCount: this.getLocalBookmarkCount,
-      }
-      globalThis.npmPageFavouritesBookmarker = Object.freeze({ ...(globalThis.npmPageFavouritesBookmarker ?? {}), ...api })
-    }
-
-    if (this.state.mergeFromShareIfAvailable()) {
+    this.#bindGlobalApi()
+    if (this.state.mergeFromShareIfAvailable?.()) {
       this.showOverlay()
     }
-
   }
 
   #started = false
   #initPromise = null
 
-  // replace your current init()
   init ({
     delayMs = 2000,
     waitForLoad = true,
@@ -146,8 +132,9 @@ export class PageFaves {
     this.#started = true
 
     this.allHearts.forEach(h => h.mount())
-    this.#bindHotkey()
 
+    // sync if needed -
+    // @TODO: throttle this! / check if this works
     if (this.opts.syncOnLoad && this.opts.userIsLoggedIn) {
       this.#syncIfStale().catch(e => {
         console.error('Sync failed', e)
@@ -156,44 +143,68 @@ export class PageFaves {
     }
 
     this.allHearts.forEach(h => h.update())
+
+    this.#bindHotkeys()
   }
 
-  toggleFromElement(el) {
-    const url = el.dataset.pfUrl || el.href || ''
-    if(this.isBookmarked) {
-      return this.remove(url)
-    } else {
-      const title = el.dataset.pfTitle || el.innerText || el.textContent || url || ''
-      const imagelink = el.dataset.pfImagelink || ''
-      const description = el.dataset.pfDescription || ''
-      return this.add(url, title, imagelink, description)
+  destroy () {
+    try { this.unsubscribe?.() } catch {}
+    this.allHearts?.forEach(h => h.unmount?.())
+    if (this.#escListener) {
+      window.removeEventListener('keydown', this.#escListener)
+      this.#escListener = null
     }
+    if (this.#hotkeyListeners) {
+      window.removeEventListener('keydown', this.#hotkeyListeners)
+      this.#hotkeyListeners = null
+    }
+
+  }
+
+
+  toggleFromElement (el) {
+    const url = el?.dataset?.pfUrl || el?.href || ''
+
+    if (!url) return false
+    if (this.isBookmarked(url)) {
+      return this.remove(url)
+    }
+    const title = el.dataset.pfTitle || el.innerText || el.textContent || url
+    const imagelink = el.dataset.pfImagelink || ''
+    const description = el.dataset.pfDescription || ''
+    return this.add(url, title, imagelink, description)
   }
 
   // Public API
   addCurrent () {
     return this.add(
       this.opts.currentPageUrl || window.location.href,
-      this.opts.currentPageTitle || document.querySelector(this.opts.selectorForTitle)?.innerText || document.title || window.location.href,
+      this.#getCurrentTitle(),
       this.opts.currentPageImagelink  || document.querySelector('meta[property="og:image"]')?.content || '',
       this.opts.currentPageDescription || document.querySelector('meta[property="og:description"]')?.content || ''
     )
   }
+
   removeCurrent () {
     return this.remove(window.location.href)
   }
+
   isBookmarked (url = window.location.href) {
-    return this.state.has(url)
+    return this.state.has(normalizeUrl(url))
   }
+
   list () {
     return this.state.list()
   }
+
   getLocalBookmarkCount () {
     return this.state.list().length
   }
+
   toggleCurrent () {
     this.isBookmarked() ? this.removeCurrent() : this.addCurrent()
   }
+
   #escListener = null
 
   showOverlay () {
@@ -204,6 +215,7 @@ export class PageFaves {
     }
     window.addEventListener('keydown', this.#escListener)
   }
+
   hideOverlay () {
     this.overlay.hide()
     if (this.#escListener) {
@@ -213,11 +225,14 @@ export class PageFaves {
   }
 
   add (url, title, imagelink = '', description = '') {
+    url = normalizeUrl(url)
     const ok = this.state.add(url, title, imagelink, description)
     if (ok) this.#ping('added', { url, title, imagelink, description })
     return ok
   }
+
   remove (url) {
+    url = normalizeUrl(url)
     const ok = this.state.remove(url)
     if (ok) this.#ping('removed', { url })
     return ok
@@ -235,8 +250,8 @@ export class PageFaves {
 
       if (ok && data?.status === 'success') {
         await this.state.setCodeAndShareLink(data)
-        const localCount = await this.getLocalBookmarkCount()
-        if (localCount !== data.numberOfBookmarks) {
+        const localCount = this.getLocalBookmarkCount()
+        if (Number.isFinite(data.numberOfBookmarks) && localCount !== data.numberOfBookmarks) {
           this.isInSync = false
           await this.syncFromServer()
         } else {
@@ -260,22 +275,29 @@ export class PageFaves {
     }
   }
 
-  async copyShareLink () {
+  async copyShareLink (event) {
+    event.preventDefault()
+    const el = event.target
     let link = this.state.getShareLink()
     if (!link) return false
     link = makeAbsoluteUrl(link)
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      return navigator.clipboard.writeText(link)
-    } else {
-      const textarea = document.createElement('textarea')
-      textarea.value = link
-      document.body.appendChild(textarea)
-      textarea.select()
-      document.execCommand('copy')
-      document.body.removeChild(textarea)
-      return Promise.resolve()
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(link)
+      } else {
+        const textarea = document.createElement('textarea')
+        textarea.value = link
+        document.body.appendChild(textarea)
+        textarea.select()
+        document.execCommand('copy')
+        textarea.remove()
+      }
+      el.innerText = 'Copied'
+      alert('The share link has been copied to your clipboard.')
+      return true
+    } catch {
+      return false
     }
-    alert('The share link has been copied to your clipboard.')
   }
 
   async shareFromServer () {
@@ -284,19 +306,23 @@ export class PageFaves {
   }
 
   // Private
-  #bindHotkey () {
-    window.addEventListener('keydown', e => {
-      if (
-        e.code === this.opts.overlayHotkey &&
-        e.ctrlKey &&
-        e.shiftKey &&
-        !e.metaKey &&
-        !e.altKey
-      ) {
+  #hotkeyListeners = null
+  #bindHotkeys () {
+    this.#hotkeyListeners = (e) => {
+      const tag = (e.target && e.target.tagName) || ''
+      if (e.repeat) return
+      if (/(INPUT|TEXTAREA|SELECT)/.test(tag)) return
+      if (e.target?.isContentEditable) return
+      if (e.code === this.opts.overlayHotkey && e.ctrlKey && e.shiftKey && !e.metaKey && !e.altKey) {
         e.preventDefault()
         this.showOverlay()
       }
-    })
+      if (e.code === this.opts.heartingHokey && e.ctrlKey && e.shiftKey && !e.metaKey && !e.altKey) {
+        e.preventDefault()
+        this.toggleCurrent()
+      }
+    }
+    window.addEventListener('keydown', this.#hotkeyListeners)
   }
 
   #canServer () {
@@ -304,7 +330,7 @@ export class PageFaves {
   }
 
   async #syncIfStale () {
-    if (this.state.isInSync === true) return
+    if (this.isInSync === true) return
     await this.syncFromServer()
   }
 
@@ -339,15 +365,14 @@ export class PageFaves {
 
     this.otherHearts = AttachInlineHearts(
       {
-        isBookmarked: () => this.isBookmarked(),
+        isBookmarked: (url) => this.isBookmarked(url),
         hasBookmarks: () => this.state.list().length > 0,
-        onToggle: () => this.toggleFromElement(),
+        onToggle: (ctx) => this.toggleFromElement(ctx?.el ?? null),
         onShowOverlay: () => this.showOverlay(),
         template: this.opts.templates.heart,
       },
       document
     )
-
     this.allHearts = [this.heart, ...(this.otherHearts ?? [])].filter(Boolean)
   }
 
@@ -371,12 +396,55 @@ export class PageFaves {
       // NEW: pass login awareness to overlay (for CTA)
       isLoggedIn: () => !!this.opts.userIsLoggedIn,
       loginUrl: this.opts.loginUrl,
-      shareLink: this.state.getShareLink(),
+      shareLink: () => this.state.getShareLink(),
       templates: {
         overlayBar: this.opts.templates.overlayBar,
         overlayShell: this.opts.templates.overlayShell,
         overlayRow: this.opts.templates.overlayRow
       }
     })
+  }
+
+  #bindGlobalApi() {
+    if (typeof globalThis !== 'undefined') {
+      const api = {
+        toggleFromElement: this.toggleFromElement.bind(this),
+        toggleCurrent: this.toggleCurrent.bind(this),
+        showOverlay: this.showOverlay.bind(this),
+        hideOverlay: this.hideOverlay.bind(this),
+        add: this.add.bind(this),
+        remove: this.remove.bind(this),
+        isBookmarked: this.isBookmarked.bind(this),
+        getLocalBookmarkCount: this.getLocalBookmarkCount.bind(this),
+      }
+      globalThis.npmPageFavouritesBookmarker = Object.freeze({
+        ...(globalThis.npmPageFavouritesBookmarker ?? {}),
+        ...api
+      })
+    }
+  }
+
+  #getCurrentTitle () {
+    return (
+      this.opts.currentPageTitle ||
+      document.querySelector(this.opts.selectorForTitle)?.textContent?.trim() ||
+      document.title ||
+      ''
+    )
+  }
+
+  #queue = []
+
+  #pingScheduled = false
+
+  #schedulePing (type, payload) {
+    this.#queue.push({type, payload})
+    if (this.#pingScheduled) return
+    this.#pingScheduled = true
+    setTimeout(async () => {
+      const batch = this.#queue.splice(0)
+      this.#pingScheduled = false
+      await this.#ping('batch', batch)
+    }, 150)
   }
 }

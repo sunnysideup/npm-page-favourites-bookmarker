@@ -54,7 +54,7 @@ export const defaultTemplates = {
 
     // login call to action
     console.log('loginUrl', loginUrl)
-    if (loginUrl) {
+    if (loginUrl && !isLoggedIn) {
       const login = document.createElement('a')
       login.className = 'pf-btn pf-login'
       login.href = loginUrl

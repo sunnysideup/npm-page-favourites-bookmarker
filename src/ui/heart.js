@@ -46,7 +46,7 @@ export class Heart {
     })
     this.appendTo = this.opts.appendTo
     this.appendTo.appendChild(this.myHeart)
-    this.update()
+    // this.update()
   }
 
   update () {

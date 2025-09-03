@@ -25,6 +25,7 @@ export class Overlay {
   show () {
     this.el ? (this.el.style.display = 'flex') : this.mount()
   }
+
   hide () {
     this.el?.remove()
     this.el = this.listEl = null

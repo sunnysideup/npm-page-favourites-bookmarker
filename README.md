@@ -1,16 +1,17 @@
 # @sunnysideup/npm-page-favourites-bookmarker
 
-Tiny in-page bookmark manager with a heart button, overlay list, and optional server sync (email/phone verification supported).
+Tiny in-page bookmark manager with a heart button, overlay list, and optional server sync including a "share list" functionality.
 
 ## Features
 
-- Heart button on every page to toggle bookmark (saves URL + title).
+- Heart button on every page to toggle bookmark (saves URL, title, image and description).
 - Overlay list of bookmarks (hotkey toggle), with remove and drag-to-sort.
-- Uses `localStorage` or `sessionStorage`.
+- Uses `local storage` or `session storage`.
 - Optional server sync:
   - Sends events on add/remove/sort.
-  - If logged in, it can sync with existing lists
-- Zero dependencies, plain ESM.
+  - If logged in, it can sync with existing list from user
+
+- Very limited dependencies, plain ESM.
 
 ## Install
 

@@ -54,7 +54,8 @@ export const defaultTemplates = {
 
     // login call to action
     console.log('loginUrl', loginUrl)
-    if (loginUrl && !isLoggedIn) {
+    console.log('isLoggedIn', isLoggedIn())
+    if (loginUrl && !isLoggedIn()) {
       const login = document.createElement('a')
       login.className = 'pf-btn pf-login'
       login.href = loginUrl
@@ -74,12 +75,13 @@ export const defaultTemplates = {
     // bar.append(sync)
 
     // share button
+    console.log('onShare', onShare)
     if (shareLink) {
       const share = document.createElement('button')
       share.className = 'pf-btn pf-share'
       share.type = 'button'
       share.textContent = 'Copy link to share'
-      share.addEventListener('click', onShare)
+      share.addEventListener('click', (e) => onShare(e));
       bar.append(share)
     }
 

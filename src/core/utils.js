@@ -1,3 +1,5 @@
+import DOMPurify from 'dompurify'
+
 export const qs = (root, sel) =>
   /** @type {HTMLElement} */ (root.querySelector(sel))
 export const qsa = (root, sel) => Array.from(root.querySelectorAll(sel))
@@ -29,9 +31,21 @@ export function makeAlphaNumCode (length = 12) {
   return result
 }
 
-export const makeAbsoluteUrl = relativeUrl => {
-  return new URL(relativeUrl, window.location.origin).href
+// If already absolute (has a scheme or starts with //), return as-is; else make absolute to current origin
+export const toAbsoluteUrl = (url = window.location.href) => {
+  const s = String(url ?? '')
+  if (!s) return ''
+  if (/^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(s) || s.startsWith('//')) return s
+  try { return new URL(s, window.location.origin).href } catch { return s }
 }
-export const normalizeUrl = function (url = window.location.href) {
-  try { return new URL(url, window.location.origin).href } catch { return String(url || '') }
+
+export const sanitizeHtml = function (str) {
+  // https://github.com/cure53/DOMPurify/tree/main/demos#what-is-this
+  return DOMPurify.sanitize(str)
+  // return str
+  //   .replace(/&/g, '&amp;')
+  //   .replace(/</g, '&lt;')
+  //   .replace(/>/g, '&gt;')
+  //   .replace(/"/g, '&quot;')
+  //   .replace(/'/g, '&#39;')
 }

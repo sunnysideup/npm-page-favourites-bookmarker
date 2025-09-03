@@ -34,9 +34,9 @@ export class Overlay {
   mount () {
     const { wrap, list } = this.opts.templates.overlayShell()
     const bar = this.opts.templates.overlayBar({
-      onClose: () => this.opts.onClose(),
-      onSync: () => this.opts.onSync(),
-      onShare: () => this.opts.onShare(),
+      onClose: (event) => this.opts.onClose(event),
+      onSync: (event) => this.opts.onSync(event),
+      onShare: (event) => this.opts.onShare(event),
       isLoggedIn: this.opts.isLoggedIn,
       loginUrl: this.opts.loginUrl,
       shareLink: this.opts.shareLink

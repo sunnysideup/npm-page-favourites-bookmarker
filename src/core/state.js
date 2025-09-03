@@ -1,6 +1,6 @@
-import DOMPurify from 'dompurify'
+
 import { Store } from './store.js'
-import { makeAlphaNumCode } from './utils.js'
+import { makeAlphaNumCode, sanitizeHtml, toAbsoluteUrl } from './utils.js'
 
 
 export class State {
@@ -51,17 +51,26 @@ export class State {
 
   add (url, title, imagelink, description) {
     if (this.has(url)) return false
-    const { newTitle, newImageLink, newDescription } = this.#testUrlAndTitle(url, title, imagelink, description)
+    console.log(imagelink)
+    const { newTitle, newImagelink, newDescription } = this.#testVarsForBookmark({url, title, imagelink, description})
+    console.log(newImagelink)
     if (!newTitle) return false // skip invalid entries
     this.bookmarks.push(
       {
         url,
         title: newTitle,
-        imagelink: newImageLink,
+        imagelink: newImagelink,
         description: newDescription,
         ts: Date.now()
       }
     )
+    console.log('opts',       {
+        url,
+        title: newTitle,
+        imagelink: newImagelink,
+        description: newDescription,
+        ts: Date.now()
+      })
     this.persist()
     return true
   }
@@ -149,12 +158,13 @@ export class State {
 
     if (Array.isArray(serverList.bookmarks)) {
       for (const { url, title, imagelink, description, ts } of serverList.bookmarks) {
-        const { newTitle, newImageLink, newDescription } = this.#testUrlAndTitle({ url, title, imagelink, description })
+        const { newTitle, newImagelink, newDescription } = this.#testVarsForBookmark({ url, title, imagelink, description })
+        console.log(this.#testVarsForBookmark({ url, title, imagelink, description }))
         if (!newTitle) continue
         map.set(url, {
           url,
           title: newTitle,
-          imagelink: newImageLink,
+          imagelink: newImagelink,
           description: newDescription,
           ts: Number.isFinite(ts) ? ts : Date.now()
         })
@@ -167,36 +177,20 @@ export class State {
     this.persist()
   }
 
-  #testUrlAndTitle ({ url = '', title = '', imagelink = '', description = '' } = {}) {
-    if (this.#isValidUrl(url)) {
-      const newTitle = this.#sanitizeHtml(title)
+  #testVarsForBookmark ({ url = '', title = '', imagelink = '', description = '' } = {}) {
+    if (toAbsoluteUrl(url)) {
+      const newTitle = sanitizeHtml(title)
       if(newTitle) {
-        const newImageLink = this.#isValidUrl(imagelink) ? imagelink : ''
-        const newDescription = this.#sanitizeHtml(description)
-        return { newTitle, newImageLink, newDescription }
+        const newImagelink = toAbsoluteUrl(imagelink)
+        const newDescription = sanitizeHtml(description)
+        return { newTitle, newImagelink, newDescription }
       }
+    } else {
+      console.warn('Invalid URL:', url)
     }
 
     return {}
   }
 
-  #sanitizeHtml (str) {
-    // https://github.com/cure53/DOMPurify/tree/main/demos#what-is-this
-    return DOMPurify.sanitize(str)
-    // return str
-    //   .replace(/&/g, '&amp;')
-    //   .replace(/</g, '&lt;')
-    //   .replace(/>/g, '&gt;')
-    //   .replace(/"/g, '&quot;')
-    //   .replace(/'/g, '&#39;')
-  }
 
-  #isValidUrl (string) {
-    try {
-      new URL(string)
-      return true
-    } catch {
-      return false
-    }
-  }
 }

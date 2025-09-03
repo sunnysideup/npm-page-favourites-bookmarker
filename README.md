@@ -62,7 +62,9 @@ const pf = new PageFaves({
   overlayHotkey: 'KeyB', // press CTRL+SHIFT+B
   syncOnLoad: true
 })
-pf.init()
+document.addEventListener('DOMContentLoaded', () => {
+  pf.init()
+})
 
 ```
 
@@ -80,7 +82,10 @@ Add a small script before you import/initialise:
     loginUrl: '/account/login',
     // optional positioning overrides
     heartPositionLeftRight: 'right',
-    heartPositionTopBottom: 'bottom'
+    heartPositionTopBottom: 'bottom',
+    currentPageTitle: document.querySelector('h2.title')?.innerText || ''
+    currentImagelink: document.querySelector('meta[property="og:image"]')?.content || ''
+    currentDescription: document.querySelector('meta[property="og:description"]')?.content || ''
   }
 </script>
 

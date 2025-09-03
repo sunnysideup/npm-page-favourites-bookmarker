@@ -4,7 +4,7 @@ import { defaultTemplates } from './ui/templates.js'
 import { AttachInlineHearts } from './ui/hearts-inline.js'
 import { Heart } from './ui/heart.js'
 import { Overlay } from './ui/overlay.js'
-import { deepMerge, makeAbsoluteUrl, normalizeUrl } from './core/utils.js'
+import { deepMerge, toAbsoluteUrl } from './core/utils.js'
 
 export class PageFaves {
 
@@ -33,7 +33,7 @@ export class PageFaves {
     currentPageImagelink: undefined,
     currentPageDescription: undefined,
     mergeOnLoad: undefined,
-    selectorForTitle: 'h1'
+    selectorForTitle: 'h1' // e.g. h1
   }
 
   isInSync = false
@@ -45,10 +45,10 @@ export class PageFaves {
       typeof window.npmPageFavouritesBookmarkerConfig === 'object'
         ? window.npmPageFavouritesBookmarkerConfig
         : {}
-
     // precedence: defaults < siteWideOpts < pageConfig
     this.opts = deepMerge(PageFaves.DEFAULTS, siteWideOpts, pageConfig)
-
+    console.log('opts', pageConfig)
+    console.log('opts', this.opts)
     const { loadByDefault, loadOnThisPage } = this.opts
     this.shouldLoad =
       typeof loadOnThisPage === 'boolean' ? loadOnThisPage : !!loadByDefault
@@ -180,8 +180,8 @@ export class PageFaves {
     return this.add(
       this.opts.currentPageUrl || window.location.href,
       this.#getCurrentTitle(),
-      this.opts.currentPageImagelink  || document.querySelector('meta[property="og:image"]')?.content || '',
-      this.opts.currentPageDescription || document.querySelector('meta[property="og:description"]')?.content || ''
+      this.opts.currentPageImagelink || '',
+      this.opts.currentPageDescription ||  ''
     )
   }
 
@@ -190,7 +190,7 @@ export class PageFaves {
   }
 
   isBookmarked (url = window.location.href) {
-    return this.state.has(normalizeUrl(url))
+    return this.state.has(toAbsoluteUrl(url))
   }
 
   list () {
@@ -225,14 +225,14 @@ export class PageFaves {
   }
 
   add (url, title, imagelink = '', description = '') {
-    url = normalizeUrl(url)
+    url = toAbsoluteUrl(url)
     const ok = this.state.add(url, title, imagelink, description)
     if (ok) this.#ping('added', { url, title, imagelink, description })
     return ok
   }
 
   remove (url) {
-    url = normalizeUrl(url)
+    url = toAbsoluteUrl(url)
     const ok = this.state.remove(url)
     if (ok) this.#ping('removed', { url })
     return ok
@@ -280,7 +280,7 @@ export class PageFaves {
     const el = event.target
     let link = this.state.getShareLink()
     if (!link) return false
-    link = makeAbsoluteUrl(link)
+    link = toAbsoluteUrl(link)
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(link)
@@ -292,8 +292,7 @@ export class PageFaves {
         document.execCommand('copy')
         textarea.remove()
       }
-      el.innerText = 'Copied'
-      alert('The share link has been copied to your clipboard.')
+      el.innerText = 'Copied to Clipboard!'
       return true
     } catch {
       return false
@@ -390,9 +389,9 @@ export class PageFaves {
         this.#ping('reordered', { from, to })
         this.overlay.renderList()
       },
-      onClose: () => this.hideOverlay(),
-      onSync: () => this.syncFromServer(),
-      onShare: () => this.copyShareLink(),
+      onClose: (event) => this.hideOverlay(event),
+      onSync: (event) => this.syncFromServer(event),
+      onShare: (event) => this.copyShareLink(event),
       // NEW: pass login awareness to overlay (for CTA)
       isLoggedIn: () => !!this.opts.userIsLoggedIn,
       loginUrl: this.opts.loginUrl,

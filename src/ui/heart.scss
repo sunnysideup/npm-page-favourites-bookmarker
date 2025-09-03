@@ -62,8 +62,6 @@
     .pf-show-bookmarks {
       display: block;
       opacity: 1;
-      width: auto;
-      height: auto;
       pointer-events: auto;
       overflow: visible;
     }
@@ -83,6 +81,7 @@
     border: none;
     font-size: 24px;
     line-height: 1;
+    height: 24px;
     &:hover {
       color: #e11d48 !important; /* red on hover */
     }
@@ -109,8 +108,6 @@
 
   .pf-show-bookmarks {
     display: none;
-    width: 0;
-    height: 0;
     opacity: 0;
     overflow: hidden;
     pointer-events: none;
@@ -120,5 +117,6 @@
       width 0.3s ease,
       height 0.3s ease,
       opacity 0.3s ease;
+    line-height: 0.4;
   }
 }

@@ -1,91 +1,96 @@
 .pf-overlay {
-    position: fixed;
+  position: fixed;
+  inset: 2% 2%;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+  z-index: 2147483001;
+  display: flex;
+  flex-direction: column;
+  @media (min-width: 640px) {
+    inset: 4% 4%;
+  }
+  @media (min-width: 1240px) {
     inset: 8% 10%;
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
-    z-index: 2147483001;
+  }
+  .pf-bar {
     display: flex;
-    flex-direction: column;
-
-    .pf-bar {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        align-items: center;
-        padding: 12px 16px;
-        border-bottom: 1px solid #eee;
-        .pf-title {
-            flex: 1;
-        }
-        .pf-share,
-        .pf-login {
-            padding: 0px 16px;
-            text-decoration: none;
-            &:hover {
-                background-color: green;
-                color: #fff;
-            }
-            font-weight: 300;
-        }
-        .pf-close {
-            margin-left: auto;
-            border: none;
-            &:hover {
-                background-color: #555;
-                color: #fff;
-            }
-        }
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #eee;
+    .pf-title {
+      flex: 1;
     }
+    .pf-share,
+    .pf-login {
+      padding: 0px 16px;
+      text-decoration: none;
+      &:hover {
+        background-color: green;
+        color: #fff;
+      }
+      font-weight: 300;
+    }
+    .pf-close {
+      margin-left: auto;
+      border: none;
+      &:hover {
+        background-color: #555;
+        color: #fff;
+      }
+    }
+  }
 
+  .pf-btn {
+    border-radius: 9999px;
+    padding: 6px 10px;
+    background: #fafafa;
+    cursor: pointer;
+    color: #000;
+    margin: 0;
+    padding: 0;
+    min-width: 3rem;
+    display: block;
+    &:hover {
+      background: #e11d48;
+      color: #fff;
+    }
+    height: 3rem !important;
+    line-height: 3rem !important;
+  }
+
+  .pf-list {
+    flex: 1;
+    overflow: auto;
+    padding: 8px 16px;
+  }
+
+  .pf-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border-bottom: 1px dashed #eee;
+    padding-right: 0;
+    padding-left: 0;
     .pf-btn {
-        border-radius: 9999px;
-        padding: 6px 10px;
-        background: #fafafa;
-        cursor: pointer;
-        color: #000;
-        margin: 0;
-        padding: 0;
-        min-width: 3rem;
-        display: block;
-        &:hover {
-            background: #e11d48;
-            color: #fff;
-        }
-        height: 3rem !important;
-        line-height: 3rem !important;
+      margin-left: auto !important;
     }
+  }
 
-    .pf-list {
-        flex: 1;
-        overflow: auto;
-        padding: 8px 16px;
+  .pf-sort {
+    cursor: grab;
+    &:active {
+      cursor: grabbing;
     }
-
-    .pf-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px;
-        border-bottom: 1px dashed #eee;
-        padding-right: 0;
-        padding-left: 0;
-        .pf-btn {
-            margin-left: auto !important;
-        }
+    .pf-link {
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-
-    .pf-sort {
-        cursor: grab;
-        &:active {
-            cursor: grabbing;
-        }
-        .pf-link {
-            flex: 1;
-            min-width: 0;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-    }
+  }
 }

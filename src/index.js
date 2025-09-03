@@ -47,8 +47,6 @@ export class PageFaves {
         : {}
     // precedence: defaults < siteWideOpts < pageConfig
     this.opts = deepMerge(PageFaves.DEFAULTS, siteWideOpts, pageConfig)
-    console.log('opts', pageConfig)
-    console.log('opts', this.opts)
     const { loadByDefault, loadOnThisPage } = this.opts
     this.shouldLoad =
       typeof loadOnThisPage === 'boolean' ? loadOnThisPage : !!loadByDefault

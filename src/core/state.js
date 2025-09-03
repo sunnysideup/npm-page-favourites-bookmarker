@@ -51,9 +51,7 @@ export class State {
 
   add (url, title, imagelink, description) {
     if (this.has(url)) return false
-    console.log(imagelink)
     const { newTitle, newImagelink, newDescription } = this.#testVarsForBookmark({url, title, imagelink, description})
-    console.log(newImagelink)
     if (!newTitle) return false // skip invalid entries
     this.bookmarks.push(
       {
@@ -64,13 +62,7 @@ export class State {
         ts: Date.now()
       }
     )
-    console.log('opts',       {
-        url,
-        title: newTitle,
-        imagelink: newImagelink,
-        description: newDescription,
-        ts: Date.now()
-      })
+
     this.persist()
     return true
   }
@@ -159,7 +151,6 @@ export class State {
     if (Array.isArray(serverList.bookmarks)) {
       for (const { url, title, imagelink, description, ts } of serverList.bookmarks) {
         const { newTitle, newImagelink, newDescription } = this.#testVarsForBookmark({ url, title, imagelink, description })
-        console.log(this.#testVarsForBookmark({ url, title, imagelink, description }))
         if (!newTitle) continue
         map.set(url, {
           url,

@@ -5,7 +5,7 @@ Tiny in-page bookmark manager with a heart button, overlay list, and optional se
 ## Features
 
 - Heart button on every page to toggle bookmark (saves URL, title, image and description).
-- Overlay list of bookmarks (hotkey toggle), with remove and drag-to-sort.
+- Overlay list of favourites (hotkey toggle), with remove and drag-to-sort.
 - Uses `local storage` or `session storage`.
 - Optional server sync:
   - Sends events on add/remove/sort.
@@ -167,9 +167,9 @@ pf.init()
 
 No network calls are made unless `baseUrl` is provided.
 
-On `init()`, if `syncOnLoad` is true and `userIsLoggedIn` is true, the client pulls bookmarks from {bookmarks} and merges with local.
+On `init()`, if `syncOnLoad` is true and `userIsLoggedIn` is true, the client pulls favourites from {bookmarks} and merges with local.
 
-This initial pull is run whenever the number of bookmarks on the server is not the same as the local ones. 
+This initial pull is run whenever the number of favourites on the server is not the same as the local ones. 
 
 Every add/remove/reorder triggers a POST {events}.
 
@@ -181,7 +181,7 @@ Every add/remove/reorder triggers a POST {events}.
 - `add(url, title, imagelink, description)` → add a bookmark
 - `remove(url)` → remove bookmark
 - `toggleCurrent()` → toggle current page
-- `list()` → get all bookmarks
+- `list()` → get all favourites
 - `isBookmarked(url)` → check if URL is saved
 
 ### Overlay

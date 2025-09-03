@@ -13,8 +13,8 @@ export const defaultTemplates = {
 
     const showBtn = document.createElement('button')
     showBtn.className = 'pf-show-bookmarks'
-    showBtn.setAttribute('aria-label', 'Show bookmarks list')
-    showBtn.title = 'Show bookmarks'
+    showBtn.setAttribute('aria-label', 'Show favourites list')
+    showBtn.title = 'Show favourites'
     showBtn.textContent = '≡'
     showBtn.addEventListener('click', e => {
       e.preventDefault()
@@ -49,12 +49,10 @@ export const defaultTemplates = {
     // title
     const title = document.createElement('strong')
     title.className = 'pf-title'
-    title.textContent = 'Bookmarks'
+    title.textContent = 'Favourites'
     bar.appendChild(title)
 
     // login call to action
-    console.log('loginUrl', loginUrl)
-    console.log('isLoggedIn', isLoggedIn())
     if (loginUrl && !isLoggedIn()) {
       const login = document.createElement('a')
       login.className = 'pf-btn pf-login'
@@ -75,7 +73,6 @@ export const defaultTemplates = {
     // bar.append(sync)
 
     // share button
-    console.log('onShare', onShare)
     if (shareLink) {
       const share = document.createElement('button')
       share.className = 'pf-btn pf-share'
@@ -92,7 +89,7 @@ export const defaultTemplates = {
     close.textContent = '×'
     close.title = 'Close'
     close.addEventListener('click', onClose)
-    close.setAttribute('aria-label', 'Close bookmarks list')
+    close.setAttribute('aria-label', 'Close favourites list')
     bar.appendChild(close)
     //
     return bar

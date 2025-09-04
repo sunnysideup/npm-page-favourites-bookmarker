@@ -19,7 +19,7 @@
     gap: 8px;
     align-items: center;
     padding: 12px 16px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #ccc;
     .pf-title {
       flex: 1;
     }
@@ -35,11 +35,15 @@
     }
     .pf-close {
       margin-left: auto;
-      border: none;
       &:hover {
         background-color: #555;
         color: #fff;
       }
+    }
+    .pf-share,
+    .pf-login,
+    .pf-close {
+      border: 1px solid #ccc;
     }
   }
 
@@ -59,6 +63,13 @@
     }
     height: 3rem !important;
     line-height: 3rem !important;
+    &.pf-del {
+      color: #e11d48;
+      &:hover {
+        background: #000;
+        color: #fff;
+      }
+    }
   }
 
   .pf-list {

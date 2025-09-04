@@ -1,25 +1,17 @@
-const createOtherPageHearts = function (
-  el,
-  opts /* {
-    position:{leftRight:'left'|'right', topBottom:'top'|'bottom'},
-    isOn:(url:string)=>boolean,
-    hasBookmarks:()=>boolean,
-    onToggle:(ctx:{url:string,title?:string,description?:string,imagelink?:string,el:HTMLElement})=>void,
-    onShowOverlay:()=>void,
-    template: Heart['opts']['template']
-  } */
-) {
+import { Heart } from './heart.js'
+
+const createOtherPageHearts = (el, opts) => {
   if (!el || el.__pfHeartAttached) return null
   el.__pfHeartAttached = true
 
   const { pfUrl: url, pfTitle: title, pfDescription: description, pfImagelink: imagelink } = el.dataset
 
-  const oneHeart = new Heart({
+  const heart = new Heart({
     appendTo: el,
-    position: opts.position || undefined,
+    position: opts.position,
     isOn: () => opts.isBookmarked(url),
-    hasBookmarks: opts.hasBookmarks,
-    onToggle: () => opts.onToggle(el),
+    numberOfBookmarks: () => Number(opts.numberOfBookmarks?.() ?? 0),
+    onToggle: () => opts.onToggle({ url, title, description, imagelink, el }),
     onShowOverlay: opts.onShowOverlay,
     template: args => {
       const node = opts.template(args)
@@ -28,11 +20,10 @@ const createOtherPageHearts = function (
     }
   })
 
-  // mount normally, then relocate into `el` (no change to Heart class needed)
-  oneHeart.mount()
-
-  return oneHeart
+  heart.mount()
+  return heart
 }
+
 
 const isHeart = (heart) =>
   !!heart && heart instanceof Heart

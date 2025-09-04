@@ -1,6 +1,6 @@
 
 import { Store } from './store.js'
-import { makeAlphaNumCode, sanitizeHtml, toAbsoluteUrl } from './utils.js'
+import { makeAlphaNumCode, sanitizeHtml, stripTags, toRelativeUrl } from './utils.js'
 
 
 export class State {
@@ -20,49 +20,56 @@ export class State {
     this.listeners = new Set()
 
     // cross-tab / external updates
-    this.store.onChange(key => {
-      let changed = false
-      if (key === this.bookmarkStorageKey) {
-        const next = this.store.getJSON(this.bookmarkStorageKey) || []
-        if (JSON.stringify(next) !== JSON.stringify(this.bookmarks)) {
-          this.bookmarks = next
-          changed = true
+    this.store.onChange(
+      key => {
+        let changed = false
+        if (key === this.bookmarkStorageKey) {
+          const next = this.store.getJSON(this.bookmarkStorageKey) || []
+          if (next.length !== this.bookmarks.length ||
+              next.some((b, i) => b.url !== this.bookmarks[i]?.url || b.ts !== this.bookmarks[i]?.ts)) {
+            this.bookmarks = next
+            changed = true
+          }
+        } else if (key === this.codeStorageKey) {
+          const next = this.store.get(this.codeStorageKey) || ''
+          if (next !== this.code) { this.code = next; changed = true }
         }
+        // else if (key === this.shareLinkStorageKey) {
+        //   const next = this.store.get(this.shareLinkStorageKey) || ''
+        //   if (next !== this.shareLink) { this.shareLink = next; changed = true }
+        // }
+        if (changed) this.#emit()
       }
-
-      if (changed) this.#emit()
-    })
+    )
   }
 
   onChange (fn) {
     this.listeners.add(fn)
     return () => this.listeners.delete(fn)
   }
-  #emit () {
-    this.listeners.forEach(fn => fn(this))
-  }
 
   list () {
-    return [...this.bookmarks]
+    return this.bookmarks.map(b => ({ ...b }))
   }
+
   has (url) {
+    url = toRelativeUrl(url)
+    if(!url) return false
     return this.bookmarks.some(b => b.url === url)
   }
 
   add (url, title, imagelink, description) {
-    if (this.has(url)) return false
-    const { newTitle, newImagelink, newDescription } = this.#testVarsForBookmark({url, title, imagelink, description})
-    if (!newTitle) return false // skip invalid entries
-    this.bookmarks.push(
-      {
-        url,
-        title: newTitle,
-        imagelink: newImagelink,
-        description: newDescription,
-        ts: Date.now()
-      }
-    )
-
+    const { newUrl, newTitle, newImagelink, newDescription } =
+      this.#testVarsForBookmark({ url, title, imagelink, description })
+    if (!newUrl || !newTitle) return false
+    if (this.has(newUrl)) return false
+    this.bookmarks.push({
+      url: newUrl,
+      title: newTitle,
+      imagelink: newImagelink,
+      description: newDescription,
+      ts: Date.now()
+    })
     this.persist()
     return true
   }
@@ -78,20 +85,36 @@ export class State {
   }
 
   reorder (from, to) {
-    if (from === to) return
+    const len = this.bookmarks.length
+    if (!Number.isInteger(from) || !Number.isInteger(to)) return
+    if (from < 0 || from >= len || to < 0 || to >= len || from === to) return
     const arr = [...this.bookmarks]
     const [m] = arr.splice(from, 1)
+    if (!m) return
     arr.splice(to, 0, m)
     this.bookmarks = arr
     this.persist()
   }
 
-  setCodeAndShareLink (data) {
-    this.setCode(data.code || '')
-    this.setShareLink(data.shareLink || '')
+  /**
+   * Clear stored data.
+   * @param {{ keepCode?: boolean, keepShareLink?: boolean, silent?: boolean }} [opts]
+   */
+  clear (opts = {}) {
+    this.bookmarks = []
+    this.code = ''
+    this.shareLink = ''
+    this.persist() // writes empties + emits change
+    return true
   }
 
-  setCode (code) {
+
+  setCodeAndShareLink (data) {
+    this.#setCode(data.code || '')
+    this.#setShareLink(data.shareLink || '')
+  }
+
+  #setCode (code) {
     if (typeof code !== 'string' || !code.trim()) {
       if (!this.code) {
         this.code = makeAlphaNumCode(12)
@@ -102,7 +125,7 @@ export class State {
     this.store.set(this.codeStorageKey, this.code)
   }
 
-  setShareLink (link) {
+  #setShareLink (link) {
     if (typeof link !== 'string' || !link.trim()) {
       if (!this.shareLink) {
         this.shareLink = ''
@@ -122,10 +145,14 @@ export class State {
   }
 
   persist () {
-    this.store.setJSON(this.bookmarkStorageKey, this.bookmarks)
-    this.store.set(this.codeStorageKey, this.code)
-    this.store.set(this.shareLinkStorageKey, this.shareLink)
-    this.#emit()
+    try {
+      this.store.setJSON(this.bookmarkStorageKey, this.bookmarks)
+      this.store.set(this.codeStorageKey, this.code)
+      this.store.set(this.shareLinkStorageKey, this.shareLink)
+      this.#emit()
+    } catch (e) {
+      console.error('Persist failed', e)
+    }
   }
 
   mergeFromShareIfAvailable () {
@@ -139,48 +166,48 @@ export class State {
   }
 
   mergeFromServer (serverList = {}, fullReplace = false) {
-    // set code only if provided & non-empty
     if (typeof serverList.code === 'string' && serverList.code.trim()) {
       this.code = serverList.code.trim()
     }
 
-    const map = fullReplace
-      ? new Map()
-      : new Map(this.bookmarks.map(b => [b.url, b]))
+    const map = fullReplace ? new Map() : new Map(this.bookmarks.map(b => [b.url, b]))
 
     if (Array.isArray(serverList.bookmarks)) {
       for (const { url, title, imagelink, description, ts } of serverList.bookmarks) {
-        const { newTitle, newImagelink, newDescription } = this.#testVarsForBookmark({ url, title, imagelink, description })
-        if (!newTitle) continue
-        map.set(url, {
-          url,
+        const { newUrl, newTitle, newImagelink, newDescription } =
+          this.#testVarsForBookmark({ url, title, imagelink, description })
+        if (!newUrl || !newTitle) continue
+        map.set(newUrl, {
+          url: newUrl,
           title: newTitle,
           imagelink: newImagelink,
           description: newDescription,
           ts: Number.isFinite(ts) ? ts : Date.now()
         })
       }
-    } else if (fullReplace) {
-      // explicit replace requested but no bookmarks provided -> clear
     }
-
     this.bookmarks = [...map.values()]
     this.persist()
   }
 
-  #testVarsForBookmark ({ url = '', title = '', imagelink = '', description = '' } = {}) {
-    if (toAbsoluteUrl(url)) {
-      const newTitle = sanitizeHtml(title)
-      if(newTitle) {
-        const newImagelink = toAbsoluteUrl(imagelink)
-        const newDescription = sanitizeHtml(description)
-        return { newTitle, newImagelink, newDescription }
-      }
-    } else {
-      console.warn('Invalid URL:', url)
-    }
+  #emit () {
+    this.listeners.forEach(fn => fn(this))
+  }
 
-    return {}
+  #testVarsForBookmark ({ url = '', title = '', imagelink = '', description = '' } = {}) {
+    const newUrl = toRelativeUrl(url)
+    if (!newUrl) {
+      console.warn('Invalid URL:', url)
+      return {}
+    }
+    const newTitle = stripTags(title)
+    if (!newTitle) {
+      console.warn('Invalid Title:', title)
+      return {}
+    }
+    const newImagelink = toRelativeUrl(imagelink) // may be ''
+    const newDescription = sanitizeHtml(description)
+    return { newUrl, newTitle, newImagelink, newDescription }
   }
 
 

@@ -4,7 +4,7 @@ import { defaultTemplates } from './ui/templates.js'
 import { AttachInlineHearts } from './ui/hearts-inline.js'
 import { Heart } from './ui/heart.js'
 import { Overlay } from './ui/overlay.js'
-import { deepMerge, toAbsoluteUrl } from './core/utils.js'
+import { deepMerge, toRelativeUrl,toAbsoluteUrl } from './core/utils.js'
 
 export class PageFaves {
 
@@ -40,6 +40,7 @@ export class PageFaves {
 
   /** @param {object} siteWideOpts */
   constructor (siteWideOpts = {}) {
+    let showOverlay = false
     const pageConfig =
       window.npmPageFavouritesBookmarkerConfig &&
       typeof window.npmPageFavouritesBookmarkerConfig === 'object'
@@ -48,23 +49,26 @@ export class PageFaves {
     // precedence: defaults < siteWideOpts < pageConfig
     this.opts = deepMerge(PageFaves.DEFAULTS, siteWideOpts, pageConfig)
     const { loadByDefault, loadOnThisPage } = this.opts
-    this.shouldLoad =
-      typeof loadOnThisPage === 'boolean' ? loadOnThisPage : !!loadByDefault
-    if (!this.shouldLoad) return
 
     this.#setupState()
     this.#setupNet()
+
+    showOverlay = this.state.mergeFromShareIfAvailable?.()
+    if(!showOverlay) {
+      this.shouldLoad =
+        typeof loadOnThisPage === 'boolean' ? loadOnThisPage : !!loadByDefault
+      if (!this.shouldLoad) return
+    }
+
     this.#createHearts()
     this.#createOverlay()
-
 
     this.unsubscribe = this.state.onChange(() => {
       this.allHearts.forEach(h => h.update())
     })
 
-
     this.#bindGlobalApi()
-    if (this.state.mergeFromShareIfAvailable?.()) {
+    if (showOverlay) {
       this.showOverlay()
     }
   }
@@ -73,7 +77,7 @@ export class PageFaves {
   #initPromise = null
 
   init ({
-    delayMs = 2000,
+    delayMs = 20,
     waitForLoad = true,
     interactionEvents = [
       'scroll',
@@ -122,6 +126,12 @@ export class PageFaves {
     })
 
     return this.#initPromise
+  }
+
+  reinitialize () {
+    this.#started = false
+    this.#createHearts()
+    this.#start()
   }
 
   // new: the real initializer (what your old init did)
@@ -188,7 +198,7 @@ export class PageFaves {
   }
 
   isBookmarked (url = window.location.href) {
-    return this.state.has(toAbsoluteUrl(url))
+    return this.state.has(toRelativeUrl(url))
   }
 
   list () {
@@ -206,15 +216,21 @@ export class PageFaves {
   #escListener = null
 
   showOverlay () {
+    if (this.overlay.isShown()) {
+      return this.hideOverlay()
+    }
     this.overlay.show()
     if (this.#escListener) return
     this.#escListener = e => {
       if (e.code === 'Escape') this.hideOverlay()
-    }
+      }
     window.addEventListener('keydown', this.#escListener)
   }
 
   hideOverlay () {
+    if (!this.overlay.isShown()) {
+      return this.showOverlay()
+    }
     this.overlay.hide()
     if (this.#escListener) {
       window.removeEventListener('keydown', this.#escListener)
@@ -223,17 +239,21 @@ export class PageFaves {
   }
 
   add (url, title, imagelink = '', description = '') {
-    url = toAbsoluteUrl(url)
+    url = toRelativeUrl(url)
     const ok = this.state.add(url, title, imagelink, description)
     if (ok) this.#ping('added', { url, title, imagelink, description })
     return ok
   }
 
   remove (url) {
-    url = toAbsoluteUrl(url)
+    url = toRelativeUrl(url)
     const ok = this.state.remove(url)
     if (ok) this.#ping('removed', { url })
     return ok
+  }
+
+  clear () {
+    this.state.clear()
   }
 
   async #ping (type, payload) {
@@ -290,7 +310,7 @@ export class PageFaves {
         document.execCommand('copy')
         textarea.remove()
       }
-      el.innerText = 'Copied to Clipboard!'
+      el.innerText = '✓ copied'
       return true
     } catch {
       return false
@@ -305,21 +325,25 @@ export class PageFaves {
   // Private
   #hotkeyListeners = null
   #bindHotkeys () {
-    this.#hotkeyListeners = (e) => {
-      const tag = (e.target && e.target.tagName) || ''
-      if (e.repeat) return
-      if (/(INPUT|TEXTAREA|SELECT)/.test(tag)) return
-      if (e.target?.isContentEditable) return
-      if (e.code === this.opts.overlayHotkey && e.ctrlKey && e.shiftKey && !e.metaKey && !e.altKey) {
-        e.preventDefault()
-        this.showOverlay()
+    if(this.#hotkeyListeners === null) {
+      this.#hotkeyListeners = (e) => {
+        const tag = (e.target && e.target.tagName) || ''
+        if (e.repeat) return
+        if (/(INPUT|TEXTAREA|SELECT)/.test(tag)) return
+        if (e.target?.isContentEditable) return
+        const sameMods = e.ctrlKey && e.shiftKey && !e.metaKey && !e.altKey
+        if (sameMods) {
+          if (e.code === this.opts.overlayHotkey) {
+            e.preventDefault()
+            this.showOverlay()
+          } else if (e.code === this.opts.heartingHotkey) {
+            e.preventDefault()
+            this.toggleCurrent()
+          }
+        }
       }
-      if (e.code === this.opts.heartingHokey && e.ctrlKey && e.shiftKey && !e.metaKey && !e.altKey) {
-        e.preventDefault()
-        this.toggleCurrent()
-      }
+      window.addEventListener('keydown', this.#hotkeyListeners)
     }
-    window.addEventListener('keydown', this.#hotkeyListeners)
   }
 
   #canServer () {
@@ -347,23 +371,25 @@ export class PageFaves {
   }
 
   #createHearts() {
-    this.heart = new Heart({
-      appendTo: document.querySelector('.pf-heart-for-current-page') ?? document.body,
-      position: {
-        leftRight: this.opts.heartPositionLeftRight,
-        topBottom: this.opts.heartPositionTopBottom
-      },
-      isOn: () => this.isBookmarked(),
-      hasBookmarks: () => this.state.list().length > 0,
-      onToggle: () => this.toggleCurrent(),
-      onShowOverlay: () => this.showOverlay(),
-      template: this.opts.templates.heart,
-    })
+    if(! this.heart) {
+      this.heart = new Heart({
+        appendTo: document.querySelector('.pf-heart-for-current-page') ?? document.body,
+        position: {
+          leftRight: this.opts.heartPositionLeftRight,
+          topBottom: this.opts.heartPositionTopBottom
+        },
+        isOn: () => this.isBookmarked(),
+        numberOfBookmarks: () => this.state.list().length,
+        onToggle: () => this.toggleCurrent(),
+        onShowOverlay: () => this.showOverlay(),
+        template: this.opts.templates.heart,
+      })
+    }
 
     this.otherHearts = AttachInlineHearts(
       {
         isBookmarked: (url) => this.isBookmarked(url),
-        hasBookmarks: () => this.state.list().length > 0,
+        numberOfBookmarks: () => this.state.list().length,
         onToggle: (ctx) => this.toggleFromElement(ctx?.el ?? null),
         onShowOverlay: () => this.showOverlay(),
         template: this.opts.templates.heart,
@@ -411,6 +437,7 @@ export class PageFaves {
         hideOverlay: this.hideOverlay.bind(this),
         add: this.add.bind(this),
         remove: this.remove.bind(this),
+        clear: this.clear.bind(this),
         isBookmarked: this.isBookmarked.bind(this),
         getLocalBookmarkCount: this.getLocalBookmarkCount.bind(this),
       }

@@ -112,7 +112,6 @@ This can be done as follows:
 
 ```
 
-
 ### Customising templates (optional)
 
 You can override any template in templates. Example:

@@ -6,18 +6,18 @@ export class Heart {
    *    topBottom:'top'|'bottom'
    *  },
    *  isOn:()=>boolean,
-   *  hasBookmarks:()=>boolean,
+   *  numberOfBookmarks:()=>number,
    *  onToggle:()=>void,
    *  onShowOverlay:()=>void,
    *  template:(args:{
    *    onClick:(e?:Event)=>void,
-   *    onShowOverlay:()=>void,
+   *    onShowOverlay:(e?:Event)=>void,
    *    position:{
    *      leftRight:'left'|'right',
    *      topBottom:'top'|'bottom'
    *    },
    *    isOn:()=>boolean,
-   *    hasBookmarks:()=>boolean
+   *    numberOfBookmarks:()=>number
    *  })=>HTMLElement
    * }} opts
    */
@@ -33,7 +33,7 @@ export class Heart {
       onClick: e => {
         this.opts.onToggle()
         // show helper for ~1s
-        const has = this.opts.hasBookmarks()
+        const has = this.opts.numberOfBookmarks > 0
         if (has) {
           this.myHeart.classList.add('pf-show-temp')
           setTimeout(() => this.myHeart?.classList.remove('pf-show-temp'), this.opts.heartsLoadingDelay)
@@ -42,7 +42,7 @@ export class Heart {
       onShowOverlay: this.opts.onShowOverlay,
       position: this.opts.position,
       isOn: this.opts.isOn,
-      hasBookmarks: this.opts.hasBookmarks
+      numberOfBookmarks: this.opts.numberOfBookmarks
     })
     this.appendTo = this.opts.appendTo
     this.appendTo.appendChild(this.myHeart)
@@ -61,7 +61,7 @@ export class Heart {
     }
     const showBtn = this.myHeart.querySelector?.('.pf-show-bookmarks')
     if (showBtn) {
-      const visible = this.opts.hasBookmarks()
+      const visible = this.opts.numberOfBookmarks() > 0
       showBtn.style.display = visible ? '' : 'none'
     }
   }

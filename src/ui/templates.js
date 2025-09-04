@@ -1,35 +1,40 @@
 export const defaultTemplates = {
-  heart: ({ onClick, onShowOverlay, position, isOn, hasBookmarks }) => {
+  heart: ({ onClick, onShowOverlay, position, isOn, numberOfBookmarks }) => {
     const wrap = document.createElement('div')
     wrap.className = 'pf-heart-wrap'
-    if(position) {
-      wrap.classList.add(
-        `pf-heart-wrap--${position.leftRight === 'left' ? 'left' : 'right'}`
-      )
-      wrap.classList.add(
-        `pf-heart-wrap--${position.topBottom === 'top' ? 'top' : 'bottom'}`
-      )
+    if (position) {
+      wrap.classList.add(`pf-heart-wrap--${position.leftRight === 'left' ? 'left' : 'right'}`)
+      wrap.classList.add(`pf-heart-wrap--${position.topBottom === 'top' ? 'top' : 'bottom'}`)
     }
 
     const showBtn = document.createElement('button')
     showBtn.className = 'pf-show-bookmarks'
     showBtn.setAttribute('aria-label', 'Show favourites list')
     showBtn.title = 'Show favourites'
-    showBtn.textContent = '≡'
-    showBtn.addEventListener('click', e => {
-      e.preventDefault()
-      onShowOverlay()
-    })
-    if (!hasBookmarks()) showBtn.style.display = 'none'
+    showBtn.textContent = '☰'
+    showBtn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); onShowOverlay?.() })
+    if ((numberOfBookmarks?.() ?? 0) < 1) showBtn.style.display = 'none'
     wrap.appendChild(showBtn)
 
     const btn = document.createElement('button')
     btn.className = 'pf-heart'
     btn.setAttribute('aria-label', 'Toggle bookmark')
-    const on = isOn()
-    btn.textContent = on ? '❤' : '♡'
-    btn.title = on ? 'Remove bookmark' : 'Add bookmark'
-    btn.addEventListener('click', onClick)
+
+    const render = () => {
+      const on = !!isOn?.()
+      btn.textContent = on ? '❤' : '♡'
+      btn.title = on ? 'Remove bookmark' : 'Add bookmark'
+      if ((numberOfBookmarks?.() ?? 0) < 1) showBtn.style.display = 'none'
+      else showBtn.style.display = ''
+    }
+    render()
+
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      onClick?.();
+      render();
+    })
     wrap.appendChild(btn)
 
     return wrap
@@ -124,7 +129,7 @@ overlayRow: ({ item, index, onRemove, onReorder }) => {
   const del = document.createElement('button')
   del.className = 'pf-btn pf-del'
   del.type = 'button'
-  del.textContent = '×'
+  del.textContent = '❤'
   del.addEventListener('click', () => onRemove(item.url))
 
   // optional image

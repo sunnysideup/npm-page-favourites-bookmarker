@@ -1,18 +1,16 @@
 import DOMPurify from 'dompurify'
 
-export const qs = (root, sel) =>
-  /** @type {HTMLElement} */ (root.querySelector(sel))
-export const qsa = (root, sel) => Array.from(root.querySelectorAll(sel))
-
 // utils/merge.js
-const isObj = x => x && typeof x === 'object' && !Array.isArray(x)
+const isPlainObject = (x) => x && typeof x === 'object' && !Array.isArray(x) && Object.getPrototypeOf(x) === Object.prototype
+
 export function deepMerge (...sources) {
   const out = {}
   for (const src of sources) {
-    if (!isObj(src)) continue
+    if (!isPlainObject(src)) continue
     for (const k of Object.keys(src)) {
       const v = src[k]
-      out[k] = isObj(v) && isObj(out[k]) ? deepMerge(out[k], v) : v
+      if (Array.isArray(v)) out[k] = Array.isArray(out[k]) ? [...out[k], ...v] : [...v]   // or: out[k] = [...v]
+      else out[k] = isPlainObject(v) && isPlainObject(out[k]) ? deepMerge(out[k], v) : v
     }
   }
   return out
@@ -20,23 +18,41 @@ export function deepMerge (...sources) {
 
 export function makeAlphaNumCode (length = 12) {
   const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-  const charLen = chars.length
-  let result = ''
-
-  for (let i = 0; i < length; i++) {
-    const idx = Math.floor(Math.random() * charLen)
-    result += chars[idx]
+  const out = []
+  const rnd = new Uint8Array(length)
+  if (globalThis.crypto?.getRandomValues) {
+    crypto.getRandomValues(rnd)
+    for (let i = 0; i < length; i++) out.push(chars[rnd[i] % chars.length])
+  } else {
+    for (let i = 0; i < length; i++) out.push(chars[Math.floor(Math.random()*chars.length)])
   }
-
-  return result
+  return out.join('')
 }
 
-// If already absolute (has a scheme or starts with //), return as-is; else make absolute to current origin
-export const toAbsoluteUrl = (url = window.location.href) => {
-  const s = String(url ?? '')
+
+// Standardise to relative URLs only; drop or return '' if external
+export const toRelativeUrl = (url = '') => {
+  const s = String(url ?? '').trim()
   if (!s) return ''
-  if (/^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(s) || s.startsWith('//')) return s
-  try { return new URL(s, window.location.origin).href } catch { return s }
+  try {
+    const u = new URL(s, window.location.origin)
+    if (u.origin !== window.location.origin) return ''
+    const rel = u.pathname + u.search + u.hash
+    return rel.startsWith('/') ? rel : '/' + rel
+  } catch {
+    return s.startsWith('/') ? s : '/' + s
+  }
+}
+
+export function toAbsoluteUrl (url = '') {
+  const s = String(url ?? '').trim()
+  if (!s) return ''
+  try {
+    const u = new URL(s, window.location.origin)
+    return u.href
+  } catch {
+    return s.startsWith('http') ? s : 'https://' + s
+  }
 }
 
 export const sanitizeHtml = function (str) {
@@ -48,4 +64,18 @@ export const sanitizeHtml = function (str) {
   //   .replace(/>/g, '&gt;')
   //   .replace(/"/g, '&quot;')
   //   .replace(/'/g, '&#39;')
+}
+
+export const stripTags = (str) => {
+  return DOMPurify.sanitize(String(str ?? ''), { ALLOWED_TAGS: [], ALLOWED_ATTR: [] })
+  // const tmp = document.createElement('div')
+  // tmp.innerHTML = String(input ?? '')
+  // return tmp.textContent || ''
+}
+
+export const stripToText = (str = '') => {
+  const cleaned = stripTags(str)
+  const tmp = document.createElement('textarea')
+  tmp.innerHTML = cleaned
+  return tmp.value // decoded text
 }

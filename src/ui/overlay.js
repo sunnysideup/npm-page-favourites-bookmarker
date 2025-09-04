@@ -22,13 +22,21 @@ export class Overlay {
     this.listEl = null
   }
 
+  #isShown = false
+
+  isShown () {
+    return this.#isShown
+  }
+
   show () {
     this.el ? (this.el.style.display = 'flex') : this.mount()
+    this.#isShown = true
   }
 
   hide () {
     this.el?.remove()
     this.el = this.listEl = null
+    this.#isShown = false
   }
 
   mount () {

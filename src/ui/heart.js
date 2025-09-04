@@ -34,6 +34,7 @@ export class Heart {
         this.opts.onToggle()
         // show helper for ~1s
         const has = this.opts.numberOfBookmarks > 0
+        this.update()
         if (has) {
           this.myHeart.classList.add('pf-show-temp')
           setTimeout(() => this.myHeart?.classList.remove('pf-show-temp'), this.opts.heartsLoadingDelay)
@@ -57,7 +58,8 @@ export class Heart {
     if (heartBtn) {
       const on = this.opts.isOn()
       heartBtn.classList.toggle('pf-on', on)
-      heartBtn.textContent = on ? '❤' : '❤' // ♡
+      heartBtn.textContent = on ? '❤' : '❤' // ♡♡♡♡
+      heartBtn.title = on ? 'Remove bookmark' : 'Add bookmark'
     }
     const showBtn = this.myHeart.querySelector?.('.pf-show-bookmarks')
     if (showBtn) {
@@ -70,3 +72,6 @@ export class Heart {
     this.myHeart = null
   }
 }
+
+
+

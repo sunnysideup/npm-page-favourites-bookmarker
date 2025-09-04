@@ -1,4 +1,16 @@
 export const defaultTemplates = {
+
+  showOverlayButton: ({ onClick, numberOfBookmarks }) => {
+    const btn = document.createElement('button')
+    btn.className = 'pf-show-bookmarks'
+    btn.setAttribute('aria-label', 'Show favourites list')
+    btn.title = 'Show favourites'
+    btn.textContent = '❤'
+    if ((numberOfBookmarks?.() ?? 0) < 1) btn.style.display = 'none'
+    btn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); onClick?.() })
+    return btn
+  },
+
   heart: ({ onClick, onShowOverlay, position, isOn, numberOfBookmarks }) => {
     const wrap = document.createElement('div')
     wrap.className = 'pf-heart-wrap'
@@ -20,21 +32,8 @@ export const defaultTemplates = {
     btn.className = 'pf-heart'
     btn.setAttribute('aria-label', 'Toggle bookmark')
 
-    const render = () => {
-      const on = !!isOn?.()
-      btn.textContent = on ? '❤' : '♡'
-      btn.title = on ? 'Remove bookmark' : 'Add bookmark'
-      if ((numberOfBookmarks?.() ?? 0) < 1) showBtn.style.display = 'none'
-      else showBtn.style.display = ''
-    }
-    render()
+    btn.addEventListener('click', (e) => onClick(e));
 
-    btn.addEventListener('click', e => {
-      e.preventDefault();
-      e.stopPropagation();
-      onClick?.();
-      render();
-    })
     wrap.appendChild(btn)
 
     return wrap
@@ -83,6 +82,7 @@ export const defaultTemplates = {
       share.className = 'pf-btn pf-share'
       share.type = 'button'
       share.textContent = 'share'
+      share.setAttribute('aria-label', 'Share favourites list by copying link to clipboard')
       share.addEventListener('click', (e) => onShare(e));
       bar.append(share)
     }
@@ -90,11 +90,11 @@ export const defaultTemplates = {
     // universal close button
     const close = document.createElement('button')
     close.className = 'pf-btn pf-close'
+    close.title = 'Close'
     close.type = 'button'
     close.textContent = '×'
-    close.title = 'Close'
-    close.addEventListener('click', onClose)
     close.setAttribute('aria-label', 'Close favourites list')
+    close.addEventListener('click', (e) => onClose(e) )
     bar.appendChild(close)
     //
     return bar
@@ -109,65 +109,66 @@ export const defaultTemplates = {
     return { wrap, list }
   },
 
-overlayRow: ({ item, index, onRemove, onReorder }) => {
-  const row = document.createElement('div')
-  row.className = 'pf-row'
-  row.draggable = true
+  overlayRow: ({ item, index, onRemove, onReorder }) => {
+    const row = document.createElement('div')
+    row.className = 'pf-row'
+    row.draggable = true
 
-  const drag = document.createElement('span')
-  drag.className = 'pf-sort'
-  drag.title = 'Drag'
-  drag.textContent = '⋮'
+    const drag = document.createElement('span')
+    drag.className = 'pf-sort'
+    drag.title = 'Drag'
+    drag.textContent = '⋮'
 
-  const a = document.createElement('a')
-  a.className = 'pf-link'
-  a.href = item.url
-  a.target = '_blank'
-  a.rel = 'noopener'
-  a.textContent = item.title || item.url
+    const a = document.createElement('a')
+    a.className = 'pf-link'
+    a.href = item.url
+    a.target = '_blank'
+    a.rel = 'noopener'
+    a.textContent = item.title || item.url
 
-  const del = document.createElement('button')
-  del.className = 'pf-btn pf-del'
-  del.type = 'button'
-  del.textContent = '❤'
-  del.addEventListener('click', () => onRemove(item.url))
+    const del = document.createElement('button')
+    del.className = 'pf-btn pf-del'
+    del.type = 'button'
+    del.textContent = '❤'
+    del.addEventListener('click', () => onRemove(item.url))
 
-  // optional image
-  let img
-  if (item.imagelink) {
-    img = document.createElement('img')
-    img.src = item.imagelink
-    img.alt = item.title || ''
-    img.height = 50
-    img.loading = 'lazy'
+    // optional image
+    let img
+    if (item.imagelink) {
+      img = document.createElement('img')
+      img.src = item.imagelink
+      img.alt = item.title || ''
+      img.height = 50
+      img.loading = 'lazy'
+    }
+
+    // optional description
+    let p
+    if (item.description) {
+      p = document.createElement('p')
+      p.textContent = item.description
+    }
+
+    // build
+    row.append(
+      drag,
+      ...(img ? [img] : []),
+      a,
+      ...(p ? [p] : []),
+      del
+    )
+
+    row.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', String(index))
+    })
+    row.addEventListener('dragover', e => e.preventDefault())
+    row.addEventListener('drop', e => {
+      e.preventDefault()
+      const from = Number(e.dataTransfer.getData('text/plain'))
+      const to = index
+      onReorder(from, to)
+    })
+
+    return row
   }
-
-  // optional description
-  let p
-  if (item.description) {
-    p = document.createElement('p')
-    p.textContent = item.description
-  }
-
-  // build
-  row.append(
-    drag,
-    ...(img ? [img] : []),
-    a,
-    ...(p ? [p] : []),
-    del
-  )
-
-  row.addEventListener('dragstart', e => {
-    e.dataTransfer.setData('text/plain', String(index))
-  })
-  row.addEventListener('dragover', e => e.preventDefault())
-  row.addEventListener('drop', e => {
-    e.preventDefault()
-    const from = Number(e.dataTransfer.getData('text/plain'))
-    const to = index
-    onReorder(from, to)
-  })
-
-  return row
-}}
+}

@@ -62,7 +62,7 @@ export const defaultTemplates = {
       const login = document.createElement('a')
       login.className = 'pf-btn pf-login'
       login.href = loginUrl
-      login.textContent = 'log-in / create account to save'
+      login.textContent = 'save'
 
       bar.append(login)
     }
@@ -82,7 +82,7 @@ export const defaultTemplates = {
       const share = document.createElement('button')
       share.className = 'pf-btn pf-share'
       share.type = 'button'
-      share.textContent = 'Copy link to share'
+      share.textContent = 'share'
       share.addEventListener('click', (e) => onShare(e));
       bar.append(share)
     }

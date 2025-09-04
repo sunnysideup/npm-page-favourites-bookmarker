@@ -48,17 +48,10 @@ export class PageFaves {
         : {}
     // precedence: defaults < siteWideOpts < pageConfig
     this.opts = deepMerge(PageFaves.DEFAULTS, siteWideOpts, pageConfig)
-    const { loadByDefault, loadOnThisPage } = this.opts
 
     this.#setupState()
     this.#setupNet()
 
-    showOverlay = this.state.mergeFromShareIfAvailable?.()
-    if(!showOverlay) {
-      this.shouldLoad =
-        typeof loadOnThisPage === 'boolean' ? loadOnThisPage : !!loadByDefault
-      if (!this.shouldLoad) return
-    }
 
     this.#createHearts()
     this.#createOverlay()
@@ -68,7 +61,7 @@ export class PageFaves {
     })
 
     this.#bindGlobalApi()
-    if (showOverlay) {
+    if (this.state.mergeFromShareIfAvailable?.()) {
       this.showOverlay()
     }
   }
@@ -134,7 +127,6 @@ export class PageFaves {
     this.#start()
   }
 
-  // new: the real initializer (what your old init did)
   async #start () {
     if (this.#started) return
     this.#started = true
@@ -371,7 +363,9 @@ export class PageFaves {
   }
 
   #createHearts() {
-    if(! this.heart) {
+    this.shouldLoad =
+      typeof this.opts.loadOnThisPage === 'boolean' ? this.opts.loadOnThisPage : !!this.opts.loadByDefault
+    if (this.shouldLoad && !this.heart) {
       this.heart = new Heart({
         appendTo: document.querySelector('.pf-heart-for-current-page') ?? document.body,
         position: {
@@ -384,6 +378,8 @@ export class PageFaves {
         onShowOverlay: () => this.showOverlay(),
         template: this.opts.templates.heart,
       })
+    } else {
+      this.heart = null
     }
 
     this.otherHearts = AttachInlineHearts(

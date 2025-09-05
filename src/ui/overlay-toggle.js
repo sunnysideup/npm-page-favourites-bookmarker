@@ -1,3 +1,5 @@
+import { htmlClasses } from "../definitions/html-classes"
+
 export class OverlayToggle {
 
   /**
@@ -14,9 +16,8 @@ export class OverlayToggle {
    **/
 
   constructor (opts) {
+    this.unmount()
     this.opts = opts
-    this.el = null
-    this.innerSpan = null
   }
 
   unmount() {
@@ -26,17 +27,29 @@ export class OverlayToggle {
   }
 
   mount () {
-    const {outer, inner} = this.opts.templates.showOverlayToggle({
-      onClick: (e) => this.opts.onClick(e),
-      numberOfBookmarks: () => this.opts.numberOfBookmarks()
-    })
-    this.opts.appendTo.appendChild(outer)
-    this.innerSpan = inner
-    return outer
+    if(this.opts.appendTo) {
+      const {outer, inner} = this.opts.templates.showOverlayToggle({
+        onClick: (e) => this.opts.onClick(e),
+        numberOfBookmarks: () => this.opts.numberOfBookmarks(),
+        htmlClasses: this.opts.htmlClasses,
+        phrases: this.opts.phrases
+      })
+      this.opts.appendTo.appendChild(outer)
+      this.innerSpan = inner
+    }
   }
 
   update () {
-    if (!this.el) this.mount()
+    if(!this.el) {
+      return
+    }
+    if(numberOfBookmarks > 0) {
+      this.el.className.remove(this.opts.htmlClasses.noBookmarks)
+      this.el.className.add( this.opts.htmlClasses.hasBookmarks)
+    } else {
+      this.el.className.add( this.opts.htmlClasses.noBookmarks)
+      this.el.className.remove( this.opts.htmlClasses.hasBookmarks)
+    }
     const numberOfBookmarks = this.opts.numberOfBookmarks()
     if(this.innerSpan) {
       if (numberOfBookmarks > 0) {
@@ -46,13 +59,6 @@ export class OverlayToggle {
         this.innerSpan.textContent = '0'
         this.innerSpan.style.display = 'none'
       }
-    }
-    if(numberOfBookmarks > 0) {
-      this.el.className.remove(this.opts.htmlClasses.noBookmarks)
-      this.el.className.add( this.opts.htmlClasses.hasBookmarks)
-    } else {
-      this.el.className.add( this.opts.htmlClasses.noBookmarks)
-      this.el.className.remove( this.opts.htmlClasses.hasBookmarks)
     }
   }
 }

@@ -67,23 +67,29 @@ import { PageFaves } from '@sunnysideup/npm-page-favourites-bookmarker'
 
 window.myPageFavourites = new PageFaves({
   baseUrl: 'https://api.example.com/my-controller', // enables server I/O
-
+  loginUrl: '/my-account',
 })
 document.addEventListener('DOMContentLoaded', () => {
   window.myPageFavourites.init()
 })
 ```
 
-### config options
+### Config options
 
 To see the config options (and there are many), you can have a look at this file:
 
-[`index.js`](src/index.js)
+[`main configs`](src/index.js) - see `DEFAULTS`
 
+with the main config you can also set alternatives for these:
+
+[`templates`](src/definitions/templates.js)
+[`html classes`](src/definitions/html-classes.js)
+[`phrases (translations)`](src/lang/phrases.js)
 
 ### Per-page configuration (page wins)
 
-Add a small script before you import/initialise:
+Add a small script before you import/initialise
+and you can set any of the configs above on a page by page basis
 
 ```html
 <script>
@@ -92,7 +98,6 @@ Add a small script before you import/initialise:
     loadOnThisPage: true,
     // login awareness for overlay
     userIsLoggedIn: false,
-    loginUrl: '/account/login',
     // optional positioning overrides
     heartPositionLeftRight: 'right',
     heartPositionTopBottom: 'bottom',
@@ -107,7 +112,7 @@ Add a small script before you import/initialise:
 ### Adding snippets directly to your page
 
 If the following class `pf-heart-for-current-page` is present on the page then the heart will be added in this holder
-and not as per usual as an "floating" heart.
+and not as per usual as the last element to the body.
 
 ```html
 
@@ -115,7 +120,7 @@ and not as per usual as an "floating" heart.
 
 ```
 
-You can also add "add to favourites" to other pages on the page (e.g. when you hvae a list of links to other pages).
+You can also add "add to favourites" for other pages on the page (e.g. when you have a list of links to other pages).
 
 This can be done as follows:
 
@@ -125,50 +130,7 @@ This can be done as follows:
 
 ```
 
-### Customising templates (optional)
-
-You can override any template in templates. Example:
-
-```js
-import { PageFaves } from '@sunnysideup/npm-page-favourites-bookmarker'
-import { defaultTemplates } from '@sunnysideup/npm-page-favourites-bookmarker/src/ui/templates.js'
-import '@sunnysideup/npm-page-favourites-bookmarker/src/index.css'
-
-const pf = new PageFaves({
-  templates: {
-    heart: ({ onClick, onShowOverlay, position, isOn }) => {
-      const wrap = document.createElement('div')
-      wrap.className = `my-heart-wrap my-${position.leftRight} my-${position.topBottom}`
-
-      const open = document.createElement('button')
-      open.textContent = '≡'
-      open.addEventListener('click', e => { e.preventDefault(); onShowOverlay() })
-      wrap.append(open)
-
-      const btn = document.createElement('button')
-      btn.textContent = isOn() ? '★' : '☆'
-      btn.addEventListener('click', e => { e.preventDefault(); onClick() })
-      wrap.append(btn)
-
-      return wrap
-    },
-    overlayBar: (args) => defaultTemplates.overlayBar(args),
-    overlayShell: () => {
-      const wrap = document.createElement('div'); wrap.className = 'my-overlay'
-      const list = document.createElement('div'); list.className = 'my-overlay-list'
-      wrap.append(list); return { wrap, list }
-    },
-    overlayRow: ({ item }) => {
-      const row = document.createElement('div')
-      row.className = 'my-row'
-      row.textContent = item.title || item.url
-      row.addEventListener('click', () => window.open(item.url, '_blank'))
-      return row
-    }
-  }
-})
-pf.init()
-```
+where ... is a different value for each page (description and imagelink are optional)
 
 ## Hotkeys
 
@@ -185,32 +147,47 @@ This initial pull is run whenever the number of favourites on the server is not 
 
 Every add/remove/reorder triggers a POST {events}.
 
-
 ## API
+
+### General methods
+
+- `updateScreen` → align all the hearts on the page.
 
 ### Bookmark methods
 
+- `addCurrent` → add a bookmark for the current page.
+- `removeCurrent` → remove bookmark for the current page.
+- `toggleCurrent` → toggle bookmark for the current page.
+- `isBookmarked(url)` → check if URL is bookmarked
+- `toggleFromElement(el)` → add a bookmark for another page (see above for structure of el)
 - `add(url, title, imagelink, description)` → add a bookmark
 - `remove(url)` → remove bookmark
-- `toggleCurrent()` → toggle current page
+
+### List and overlay
+
 - `list()` → get all favourites
-- `isBookmarked(url)` → check if URL is saved
+- `getLocalBookmarkCount()` → get a count of local bookmarks
+- `toggleOverlay()` → show or hide overlay (showing all favourites)
+- `showOverlay()` → show overlay
+- `hideOverlay()` → hide overlay
 
-### Overlay
 
-- `showOverlay()`  
-- `hideOverlay()`  
-
-### sync
+### Server Related
 
 - `syncFromServer()` → pull bookmarks and and merge with local (only if baseUrl set)
+- `copyShareLink()` → copy sharelink to clipboard
+
+### clear and destroy
+
+- `clear()` → remove all bookmarks
+- `destroy` → the opposite of init - remove ALL and reset all
 
 #### Server Endpoints
 
 You can override each endpoint individually in `endpoints`.
 
-- `POST {events}` → `{ type, payload, at }` (called on add/remove/reorder)  
-- `GET {bookmarks}` → `[{ url, title, ts }]`  
+- `POST {events}` → `{ type, payload, at }` (types are add/remove/reorder)  
+- `GET {bookmarks}` → `[{ url, title, imagelink, description, ts }]`  
 
 ## Back-end Server Integration
 

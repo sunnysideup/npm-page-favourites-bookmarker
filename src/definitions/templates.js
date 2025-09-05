@@ -1,4 +1,4 @@
-export const defaultTemplates = {
+export const defaultTemplates = Object.freeze({
 
   showOverlayToggle: ({ onClick, htmlClasses, phrases }) => {
     const btn = document.createElement('button')
@@ -160,4 +160,4 @@ export const defaultTemplates = {
 
     return row
   }
-}
+})

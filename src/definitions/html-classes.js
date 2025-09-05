@@ -1,4 +1,4 @@
-export const htmlClasses = {
+export const htmlClasses = Object.freeze({
   heartIsHot: 'pf-heart-is-hot',
   showBookmarks: 'pf-show-bookmarks',
   numberOfBookmarks: 'pf-number-of-bookmarks',
@@ -23,4 +23,4 @@ export const htmlClasses = {
   noBookmarks: 'pf-no-bookmarks',
   hasBookmarks: 'pf-has-bookmarks',
   heartForCurrentPage: 'pf-heart-for-current-page',
-}
+})

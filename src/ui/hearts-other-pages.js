@@ -11,16 +11,9 @@ export class HeartsOtherPages {
     *  numberOfBookmarks:()=>number,
     *  onToggle:(args:{url:string,title:string,description?:string,imagelink?:string,el:HTMLElement})=>void,
     *  onShowOverlay:()=>void,
-    *  template:(args:{
-    *    onClick:(e?:Event)=>void,
-    *    onShowOverlay:(e?:Event)=>void,
-    *    position:{
-    *      leftRight:'left'|'right',
-    *      topBottom:'top'|'bottom'
-    *    },
-    *    isOn:()=>boolean,
-    *    numberOfBookmarks:()=>number
-    *  })=>HTMLElement,
+    *  templates:{
+    *    heart:Function
+    *  },
     *  heartsOtherPagesSelector: null | string,
     *  htmlClasses Record<string, string>,
     *  phrases Record<string, string>,
@@ -30,6 +23,7 @@ export class HeartsOtherPages {
   constructor (opts) {
     this.opts = opts
     this.hearts = []
+
   }
 
   getHearts() {
@@ -56,7 +50,7 @@ export class HeartsOtherPages {
     this.hearts = []
   }
 
-  createAndMountHeart = (el, forceUpdate = false) => {
+  createAndMountHeart = (el, alsoUpdate = false) => {
     if (!el || el.__pfHeartAttached) return null
     el.__pfHeartAttached = true
 
@@ -70,13 +64,15 @@ export class HeartsOtherPages {
       onToggle: () => this.opts.onToggle({ url, title, description, imagelink, el }),
       onShowOverlay: this.opts.onShowOverlay,
       template: args => {
-        const node = this.opts.template(args)
+        const node = this.opts.templates.heart(args)
         node.classList.add(this.opts.htmlClasses.heartForAnotherPageInner)
         return node
-      }
+      },
+      htmlClasses: this.opts.htmlClasses,
+      phrases: this.opts.phrases
     })
     heart.mount()
-    if(forceUpdate) {
+    if(alsoUpdate) {
       heart.update()
     }
     this.hearts.push(heart)

@@ -1,4 +1,4 @@
-export const phrases = {
+export const phrases = Object.freeze({
   addBookmark: 'Add to favourites',
   removeBookmark: 'Remove from favourites',
   toggleBookmarkLabel: 'Toggle favourite',
@@ -26,5 +26,4 @@ export const phrases = {
   dragTitle: 'Drag',
   dragSymbol: '⋮'
 
-}
-
+})

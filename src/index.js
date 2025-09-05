@@ -187,29 +187,31 @@ export class PageFaves {
     this.#bindHotkeys()
   }
 
-  destroy () {
-    try { this.unsubscribe?.() } catch {}
-    this.allHearts?.forEach(h => h.unmount?.())
-    this.overlay?.unmount()
-    this.overlayToggle?.unmount()
-    this.state = null
-    this.net = null
-    this.heart = null
-    this.otherHearts = null
-    this.allHearts = null
-    this.overlay = null
-    this.overlayToggle = null
-    this.#started = false
 
-    if (this.#hotkeyListeners) {
-      window.removeEventListener('keydown', this.#hotkeyListeners)
-      this.#hotkeyListeners = null
-    }
-    this.#watchDom?.destroy()
-    this.#watchDom = null
-
+  addCurrent () {
+    return this.add(
+      this.opts.currentPageUrl || window.location.href,
+      this.#getCurrentTitle(),
+      this.opts.currentPageImagelink || '',
+      this.opts.currentPageDescription ||  ''
+    )
   }
 
+  removeCurrent () {
+    return this.remove(this.opts.currentPageUrl || window.location.href)
+  }
+
+  toggleCurrent () {
+    if(this.shouldLoad === false) return false
+    return this.isBookmarked() ? this.removeCurrent() : this.addCurrent()
+  }
+
+  isBookmarked (url = '') {
+    if(!url) {
+      url = this.opts.currentPageUrl || window.location.href
+    }
+    return this.state.has(toRelativeUrl(url))
+  }
 
   toggleFromElement (el) {
     const url = el?.dataset?.pfUrl || el?.href || ''
@@ -224,56 +226,6 @@ export class PageFaves {
     return this.add(url, title, imagelink, description)
   }
 
-  // Public API
-  addCurrent () {
-    return this.add(
-      this.opts.currentPageUrl || window.location.href,
-      this.#getCurrentTitle(),
-      this.opts.currentPageImagelink || '',
-      this.opts.currentPageDescription ||  ''
-    )
-  }
-
-  removeCurrent () {
-    return this.remove(this.opts.currentPageUrl || window.location.href)
-  }
-
-  isBookmarked (url = '') {
-    if(!url) {
-      url = this.opts.currentPageUrl || window.location.href
-    }
-    return this.state.has(toRelativeUrl(url))
-  }
-
-  list () {
-    return this.state.list()
-  }
-
-  getLocalBookmarkCount () {
-    return this.state.list().length
-  }
-
-  toggleCurrent () {
-    if(this.shouldLoad === false) return false
-    return this.isBookmarked() ? this.removeCurrent() : this.addCurrent()
-  }
-
-  showOverlay () {
-    if (this.overlay.isShown()) {
-      return this.overlay.show()
-    } else {
-      return this.overlay.show()
-    }
-  }
-
-  hideOverlay () {
-    if (!this.overlay.isShown()) {
-      return this.overlay.show()
-    } else {
-      return this.overlay.hide()
-    }
-
-  }
 
   add (url, title, imagelink = '', description = '') {
     url = toRelativeUrl(url)
@@ -291,34 +243,33 @@ export class PageFaves {
     return isOk
   }
 
-  clear () {
-    this.state.clear()
+
+  list () {
+    return this.state.list()
   }
 
-  async #ping (type, payload) {
-    if (!this.#canServer()) return
-    try {
-      const { isOk, data } = await this.net.post(this.net.endpoints.events, {
-        code: this.state.code,
-        type,
-        payload,
-        at: Date.now()
-      })
+  getLocalBookmarkCount () {
+    return this.state.list().length
+  }
 
-      if (isOk && data?.status === 'success') {
-        await this.state.setCodeAndShareLink(data)
-        const localCount = this.getLocalBookmarkCount()
-        if (Number.isFinite(data.numberOfBookmarks) && localCount !== data.numberOfBookmarks) {
-          this.#isInSync = false
-          await this.syncFromServer()
-        } else {
-          this.#isInSync = true
-        }
-      }
-    } catch (err) {
-      console.error('Ping failed', err)
+  toggleOverlay() {
+    if (this.overlay.isShown()) {
+      return this.overlay.hide()
+    } else {
+      return this.overlay.show()
     }
   }
+
+  showOverlay () {
+    return this.overlay.show()
+  }
+
+  hideOverlay () {
+    if (this.overlay.isShown()) {
+      return this.overlay.hide()
+    }
+  }
+
 
   async syncFromServer () {
     if (!this.#canServer()) return
@@ -356,11 +307,56 @@ export class PageFaves {
     }
   }
 
-  async shareFromServer () {
-    await this.syncFromServer()
-    this.overlay.update()
+  clear () {
+    this.state.clear()
   }
 
+  destroy () {
+    try { this.unsubscribe?.() } catch {}
+    this.allHearts?.forEach(h => h.unmount?.())
+    this.overlay?.unmount()
+    this.overlayToggle?.unmount()
+    this.state = null
+    this.net = null
+    this.heart = null
+    this.otherHearts = null
+    this.allHearts = null
+    this.overlay = null
+    this.overlayToggle = null
+    this.#started = false
+
+    if (this.#hotkeyListeners) {
+      window.removeEventListener('keydown', this.#hotkeyListeners)
+      this.#hotkeyListeners = null
+    }
+    this.#watchDom?.destroy()
+    this.#watchDom = null
+  }
+
+  async #ping (type, payload) {
+    if (!this.#canServer()) return
+    try {
+      const { isOk, data } = await this.net.post(this.net.endpoints.events, {
+        code: this.state.code,
+        type,
+        payload,
+        at: Date.now()
+      })
+
+      if (isOk && data?.status === 'success') {
+        await this.state.setCodeAndShareLink(data)
+        const localCount = this.getLocalBookmarkCount()
+        if (Number.isFinite(data.numberOfBookmarks) && localCount !== data.numberOfBookmarks) {
+          this.#isInSync = false
+          await this.syncFromServer()
+        } else {
+          this.#isInSync = true
+        }
+      }
+    } catch (err) {
+      console.error('Ping failed', err)
+    }
+  }
 
   #bindHotkeys () {
     if(this.#hotkeyListeners === null) {
@@ -402,7 +398,7 @@ export class PageFaves {
   #createHearts() {
     this.#createPageHeart()
     this.#createOtherPageHearts()
-    this.#mergeAllHearts()
+    this.#setAllHearts()
   }
 
 
@@ -420,7 +416,9 @@ export class PageFaves {
         numberOfBookmarks: () => this.state.list().length,
         onToggle: () => this.toggleCurrent(),
         onShowOverlay: () => this.showOverlay(),
-        template: this.opts.templates.heart,
+        templates: {
+          heart: this.opts.templates.heart,
+        },
         htmlClasses: this.opts.htmlClasses,
         heartsLoadingDelay: this.opts.heartsLoadingDelay
       })
@@ -432,7 +430,6 @@ export class PageFaves {
   }
 
   #createOtherPageHearts() {
-
     this.otherHearts = HeartsOtherPages(
       {
         isBookmarked: (url) => this.isBookmarked(url),
@@ -446,8 +443,8 @@ export class PageFaves {
     this.otherHearts.mount()
   }
 
-  #mergeAllHearts() {
-    this.allHearts =  [this.heart, ...(this.otherHearts?.getHearts() || [])].filter(Boolean)
+  #setAllHearts() {
+    this.allHearts = [this.heart, ...(this.otherHearts?.getHearts() || [])].filter(Boolean)
   }
 
   #createOverlay() {
@@ -477,13 +474,20 @@ export class PageFaves {
         overlayRow: this.opts.templates.overlayRow
       },
       htmlClasses: this.opts.htmlClasses,
+      phrases: this.opts.phrases
     })
   }
 
   #createOverlayToggle() {
     this.overlayToggle = new OverlayToggle({
       onClick: (e) => { e.preventDefault(); e.stopPropagation(); this.showOverlay() },
-      numberOfBookmarks: () => this.state.list().length
+      numberOfBookmarks: () => this.state.list().length,
+      appendTo: document.querySelector('.' + this.opts.htmlClasses.overlayToggleContainer),
+      templates: {
+        showOverlayToggle: this.opts.templates.showOverlayToggle
+      },
+      htmlClasses: this.opts.htmlClasses,
+      phrases: this.opts.phrases,
     })
     this.overlayToggle.mount()
   }
@@ -519,11 +523,11 @@ export class PageFaves {
       className: this.opts.htmlClasses.heartForAnotherPage,
       onAdd: el => {
         this.otherHearts.createAndMountHeart(el)
-        this.#mergeAllHearts()
+        this.#setAllHearts()
       },
       onRemove: el => {
         this.otherHearts.removeHeart(el)
-        this.#mergeAllHearts()
+        this.#setAllHearts()
       },
       observeToggles: false
     }).start()

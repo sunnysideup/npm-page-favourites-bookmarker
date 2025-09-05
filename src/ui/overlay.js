@@ -60,14 +60,21 @@ export class Overlay {
   }
 
   mount () {
-    const { wrap, list } = this.opts.templates.overlayShell()
+    const { wrap, list } = this.opts.templates.overlayShell(
+      {
+        htmlClasses: this.opts.htmlClasses,
+        phrases: this.opts.phrases
+      }
+    )
     const bar = this.opts.templates.overlayBar({
       onClose: (event) => this.opts.onClose(event),
       onSync: (event) => this.opts.onSync(event),
       onShare: (event) => this.opts.onShare(event),
       isLoggedIn: this.opts.isLoggedIn,
       loginUrl: this.opts.loginUrl,
-      shareLink: this.opts.shareLink
+      shareLink: this.opts.shareLink,
+      htmlClasses: this.opts.htmlClasses,
+      phrases: this.opts.phrases
     })
     wrap.prepend(bar)
     document.body.appendChild(wrap)
@@ -97,7 +104,9 @@ export class Overlay {
         item,
         index: i,
         onRemove: url => this.opts.onRemove(url),
-        onReorder: (from, to) => this.opts.onReorder(from, to)
+        onReorder: (from, to) => this.opts.onReorder(from, to),
+        htmlClasses: this.opts.htmlClasses,
+        phrases: this.opts.phrases
       })
       frag.appendChild(row)
     })

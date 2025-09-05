@@ -11,14 +11,16 @@ export class Heart {
    *  onShowOverlay:()=>void,
    *  heartsLoadingDelay?:number,
    *  appendTo?:HTMLElement,
-   *  template:(args:{})=>HTMLElement
+   *  templates:{
+   *    heart:Function
+   *  },
    *  htmlClasses Record<string, string>,
    *  phrases Record<string, string>,
    * }} opts
    */
   constructor (opts) {
-    this.opts = opts
     this.unmount()
+    this.opts = opts
   }
 
   getEl() {
@@ -27,7 +29,7 @@ export class Heart {
 
   mount () {
     if (this.myHeart) return
-    const {wrap, heartButton, showBtn} = this.opts.template({
+    const {wrap, heartBtn, showBtn} = this.opts.template.heart({
       onClick: e => {
         this.opts.onToggle()
         // show helper for ~1s
@@ -47,9 +49,10 @@ export class Heart {
       phrases: this.opts.phrases
     })
     this.myHeart = wrap
-    this.heartBtn = heartButton
-    this.showBtn = showBtn
-    (this.opts.appendTo || document.body).appendChild(this.myHeart)
+    this.heartBtn = heartBtn
+    this.showBtn = showBtn;
+    const appendTo = this.opts.appendTo || document.body
+    appendTo.appendChild(this.myHeart)
     // this.update()
     return this;
   }

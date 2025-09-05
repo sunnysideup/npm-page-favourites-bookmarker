@@ -29,11 +29,16 @@ export class Overlay {
   }
 
   show () {
-    this.el ? (this.el.style.display = 'flex') : this.mount()
-    this.#isShown = true
+    if(!this.#isShown) {
+      this.mount()
+    }
   }
 
   hide () {
+    this.unmount()
+  }
+
+  unmount() {
     this.el?.remove()
     this.el = this.listEl = null
     this.#isShown = false
@@ -53,10 +58,11 @@ export class Overlay {
     document.body.appendChild(wrap)
     this.el = wrap
     this.listEl = list
-    this.renderList()
+    this.#renderList()
+    this.#isShown = true
   }
 
-  renderList () {
+  #renderList () {
     if (!this.listEl) return
     this.listEl.innerHTML = ''
     const frag = document.createDocumentFragment()

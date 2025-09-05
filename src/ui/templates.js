@@ -1,13 +1,16 @@
 export const defaultTemplates = {
 
-  showOverlayButton: ({ onClick, numberOfBookmarks }) => {
+  showOverlayToggle: ({ onClick, numberOfBookmarks }) => {
     const btn = document.createElement('button')
     btn.className = 'pf-show-bookmarks'
     btn.setAttribute('aria-label', 'Show favourites list')
     btn.title = 'Show favourites'
     btn.textContent = '❤'
-    if ((numberOfBookmarks?.() ?? 0) < 1) btn.style.display = 'none'
-    btn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); onClick?.() })
+    const span = document.createElement('span')
+    span.className = 'pf-number-of-bookmarks'
+    span.textContent = String(numberOfBookmarks?.() ?? 0)
+    btn.appendChild(span)
+    btn.addEventListener('click', e => onClick(e))
     return btn
   },
 

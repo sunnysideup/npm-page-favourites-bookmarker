@@ -1,7 +1,7 @@
 import { State } from './core/state.js'
 import { Net } from './core/net.js'
 import { defaultTemplates } from './ui/templates.js'
-import { AttachInlineHearts } from './ui/hearts-inline.js'
+import { attachOtherPagesHearts } from './ui/hearts-other-pages.js'
 import { Heart } from './ui/heart.js'
 import { Overlay } from './ui/overlay.js'
 import { deepMerge, toRelativeUrl,toAbsoluteUrl } from './core/utils.js'
@@ -40,7 +40,6 @@ export class PageFaves {
 
   /** @param {object} siteWideOpts */
   constructor (siteWideOpts = {}) {
-    let showOverlay = false
     const pageConfig =
       window.npmPageFavouritesBookmarkerConfig &&
       typeof window.npmPageFavouritesBookmarkerConfig === 'object'
@@ -52,15 +51,14 @@ export class PageFaves {
     this.#setupState()
     this.#setupNet()
 
-
     this.#createHearts()
     this.#createOverlay()
+    this.#createOverlayToggle()
 
     this.unsubscribe = this.state.onChange(() => {
-      this.allHearts.forEach(h => h.update())
+      this.updateScreen()
     })
 
-    this.#bindGlobalApi()
     if (this.state.mergeFromShareIfAvailable?.()) {
       this.showOverlay()
     }
@@ -127,6 +125,11 @@ export class PageFaves {
     this.#start()
   }
 
+  updateScreen() {
+    this.allHearts.forEach(h => h.update())
+    this.overlayToggle?.update()
+  }
+
   async #start () {
     if (this.#started) return
     this.#started = true
@@ -142,7 +145,7 @@ export class PageFaves {
       })
     }
 
-    this.allHearts.forEach(h => h.update())
+    this.updateScreen()
 
     this.#bindHotkeys()
   }
@@ -150,10 +153,17 @@ export class PageFaves {
   destroy () {
     try { this.unsubscribe?.() } catch {}
     this.allHearts?.forEach(h => h.unmount?.())
-    if (this.#escListener) {
-      window.removeEventListener('keydown', this.#escListener)
-      this.#escListener = null
-    }
+    this.overlay?.unmount()
+    this.overlayToggle?.unmount()
+    this.state = null
+    this.net = null
+    this.heart = null
+    this.otherHearts = null
+    this.allHearts = null
+    this.overlay = null
+    this.overlayToggle = null
+    this.#started = false
+
     if (this.#hotkeyListeners) {
       window.removeEventListener('keydown', this.#hotkeyListeners)
       this.#hotkeyListeners = null
@@ -209,25 +219,20 @@ export class PageFaves {
 
   showOverlay () {
     if (this.overlay.isShown()) {
-      return this.hideOverlay()
+      return this.overlay.show()
+    } else {
+      return this.overlay.show()
     }
-    this.overlay.show()
-    if (this.#escListener) return
-    this.#escListener = e => {
-      if (e.code === 'Escape') this.hideOverlay()
-      }
-    window.addEventListener('keydown', this.#escListener)
+
   }
 
   hideOverlay () {
     if (!this.overlay.isShown()) {
-      return this.showOverlay()
+      return this.overlay.show()
+    } else {
+      return this.overlay.hide()
     }
-    this.overlay.hide()
-    if (this.#escListener) {
-      window.removeEventListener('keydown', this.#escListener)
-      this.#escListener = null
-    }
+
   }
 
   add (url, title, imagelink = '', description = '') {
@@ -316,6 +321,7 @@ export class PageFaves {
 
   // Private
   #hotkeyListeners = null
+
   #bindHotkeys () {
     if(this.#hotkeyListeners === null) {
       this.#hotkeyListeners = (e) => {
@@ -382,7 +388,7 @@ export class PageFaves {
       this.heart = null
     }
 
-    this.otherHearts = AttachInlineHearts(
+    this.otherHearts = attachOtherPagesHearts(
       {
         isBookmarked: (url) => this.isBookmarked(url),
         numberOfBookmarks: () => this.state.list().length,
@@ -401,7 +407,7 @@ export class PageFaves {
       onRemove: url => {
         this.remove(url)
         this.overlay.renderList()
-        this.allHearts.forEach(h => h.update())
+        this.updateScreen()
       },
       // CHANGED: ping on reorder too
       onReorder: (from, to) => {
@@ -424,24 +430,11 @@ export class PageFaves {
     })
   }
 
-  #bindGlobalApi() {
-    if (typeof globalThis !== 'undefined') {
-      const api = {
-        toggleFromElement: this.toggleFromElement.bind(this),
-        toggleCurrent: this.toggleCurrent.bind(this),
-        showOverlay: this.showOverlay.bind(this),
-        hideOverlay: this.hideOverlay.bind(this),
-        add: this.add.bind(this),
-        remove: this.remove.bind(this),
-        clear: this.clear.bind(this),
-        isBookmarked: this.isBookmarked.bind(this),
-        getLocalBookmarkCount: this.getLocalBookmarkCount.bind(this),
-      }
-      globalThis.npmPageFavouritesBookmarker = Object.freeze({
-        ...(globalThis.npmPageFavouritesBookmarker ?? {}),
-        ...api
-      })
-    }
+  #createOverlayToggle() {
+    this.overlayToggle = new OverlayToggle({
+      onClick: (e) => { e.preventDefault(); e.stopPropagation(); this.showOverlay() },
+      numberOfBookmarks: () => this.state.list().length
+    })
   }
 
   #getCurrentTitle () {

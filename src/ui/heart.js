@@ -9,22 +9,18 @@ export class Heart {
    *  numberOfBookmarks:()=>number,
    *  onToggle:()=>void,
    *  onShowOverlay:()=>void,
-   *  template:(args:{
-   *    onClick:(e?:Event)=>void,
-   *    onShowOverlay:(e?:Event)=>void,
-   *    position:{
-   *      leftRight:'left'|'right',
-   *      topBottom:'top'|'bottom'
-   *    },
-   *    isOn:()=>boolean,
-   *    numberOfBookmarks:()=>number
-   *  })=>HTMLElement
+   *  heartsLoadingDelay?:number,
+   *  appendTo?:HTMLElement,
+   *  template:(args:{})=>HTMLElement
    * }} opts
    */
   constructor (opts) {
     this.opts = opts
     this.myHeart = null
-    this.appendTo = null
+  }
+
+  getEl() {
+    return this.myHeart
   }
 
   mount () {
@@ -37,7 +33,8 @@ export class Heart {
         this.update()
         if (has) {
           this.myHeart.classList.add('pf-show-temp')
-          setTimeout(() => this.myHeart?.classList.remove('pf-show-temp'), this.opts.heartsLoadingDelay)
+          const delay = this.opts.heartsLoadingDelay ? this.opts.heartsLoadingDelay : 1000
+          setTimeout(() => this.myHeart?.classList.remove('pf-show-temp'), delay)
         }
       },
       onShowOverlay: this.opts.onShowOverlay,
@@ -45,8 +42,7 @@ export class Heart {
       isOn: this.opts.isOn,
       numberOfBookmarks: this.opts.numberOfBookmarks
     })
-    this.appendTo = this.opts.appendTo
-    this.appendTo.appendChild(this.myHeart)
+    (this.opts.appendTo || document.body).appendChild(this.myHeart)
     // this.update()
   }
 
@@ -67,6 +63,7 @@ export class Heart {
       showBtn.style.display = visible ? '' : 'none'
     }
   }
+
   unmount () {
     this.myHeart?.remove()
     this.myHeart = null

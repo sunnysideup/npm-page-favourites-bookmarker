@@ -71,7 +71,10 @@ export class Store {
     this.listeners.clear()
   }
 
-  onChange (fn) { this.listeners.add(fn); return () => this.listeners.delete(fn) }
+  onChange (fn) {
+    this.listeners.add(fn);
+    return () => this.listeners.delete(fn)
+  }
 
 
   // Sharing helpers (kept in local storage)
@@ -79,7 +82,9 @@ export class Store {
     try {
       const raw = window.localStorage.getItem(this.nameOfTemporarySharedStore)
       return raw ? JSON.parse(raw) : null
-    } catch { return null }
+    } catch {
+      return null
+    }
   }
 
   removeTemporarySharedData () {
@@ -119,7 +124,10 @@ export class Store {
     this.channel?.postMessage({ type: this.nameOfStore + '-changed', key: k })
     this.#emit(k)
   }
-  removeJSON (k) { this.remove(k) }
+
+  removeJSON (k) {
+    this.remove(k)
+  }
 
   clear () {
     // only clears known keys in your app; for full wipe, iterate your key list
@@ -140,5 +148,7 @@ export class Store {
     }
   }
 
-  #emit (key) { this.listeners.forEach(fn => fn(key)) }
+  #emit (key) {
+    this.listeners.forEach(fn => fn(key))
+  }
 }

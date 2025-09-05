@@ -36,7 +36,7 @@ export class PageFaves {
     heartPositionTopBottom: 'bottom', // position of heart icon
     heartingHotkey: 'KeyH', // key used to (un)heart the current page
     // other hearts
-    heartsOtherPagesSelector: 'body', // CSS selector for sections to scan for hearts
+    heartsOtherPagesSelector: '', // CSS selector for sections to scan for hearts
     // all hearts
     heartsLoadingDelay: 1000, // in ms, how long hearts stay 'hot' after being clicked
 
@@ -506,8 +506,9 @@ export class PageFaves {
   #watchDomInit () {
     if (this.#watchDom) return
     if (!this.otherHearts) return
+    if (!this.opts.heartsOtherPagesSelector) return
 
-    const selector = this.opts.heartsOtherPagesSelector || 'body'
+    const selector = this.opts.heartsOtherPagesSelector
     const root = document.querySelector(selector) || document.body
     if (!root) return
 

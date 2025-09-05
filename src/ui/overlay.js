@@ -7,13 +7,16 @@ export class Overlay {
    *   onClose:()=>void,
    *   onSync:()=>Promise<void>,
    *   onShare:()=>Promise<void>,
-   *   isLoggedIn?: ()=>boolean,
+   *   shareLink?: string,
+   *   userIsLoggedIn: boolean,
    *   loginUrl?: string,
    *   templates:{
    *     overlayBar:Function,
    *     overlayShell:Function,
    *     overlayRow:Function
    *   }
+   *   htmlClasses Record<string, string>,
+   *   phrases Record<string, string>,
    * }} opts
    */
   constructor (opts) {
@@ -69,7 +72,7 @@ export class Overlay {
       onClose: (event) => this.opts.onClose(event),
       onSync: (event) => this.opts.onSync(event),
       onShare: (event) => this.opts.onShare(event),
-      isLoggedIn: this.opts.isLoggedIn,
+      userIsLoggedIn: this.opts.userIsLoggedIn,
       loginUrl: this.opts.loginUrl,
       shareLink: this.opts.shareLink,
       htmlClasses: this.opts.htmlClasses,

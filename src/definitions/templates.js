@@ -44,7 +44,7 @@ export const defaultTemplates = Object.freeze({
   overlayBar: ({
     onClose,
     onShare,
-    isLoggedIn,
+    userIsLoggedIn,
     loginUrl,
     shareLink,
     htmlClasses,
@@ -60,7 +60,7 @@ export const defaultTemplates = Object.freeze({
     bar.appendChild(title)
 
     // login call to action
-    if (loginUrl && !isLoggedIn()) {
+    if (loginUrl && !userIsLoggedIn) {
       const login = document.createElement('a')
       login.className = `${htmlClasses.btn} ${htmlClasses.login}`
       login.href = loginUrl

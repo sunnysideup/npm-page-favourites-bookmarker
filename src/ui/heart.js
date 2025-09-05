@@ -1,16 +1,14 @@
 export class Heart {
   /**
    * @param {{
+   *  onClick:()=>void,
+   *  onShowOverlay:()=>void,
+   *  appendTo?:HTMLElement,
    *  position:{
    *    leftRight:'left'|'right',
    *    topBottom:'top'|'bottom'
    *  },
-   *  isOn:()=>boolean,
-   *  numberOfBookmarks:()=>number,
-   *  onToggle:()=>void,
-   *  onShowOverlay:()=>void,
    *  heartsLoadingDelay?:number,
-   *  appendTo?:HTMLElement,
    *  templates:{
    *    heart:Function
    *  },
@@ -29,12 +27,12 @@ export class Heart {
 
   mount () {
     if (this.myHeart) return
-    const { wrap, heartBtn, showBtn } = this.opts.template.heart({
+    const { wrap, heartBtn, showBtn } = this.opts.templates.heart({
       onClick: e => {
-        this.opts.onToggle()
+        this.opts.onClick()
         // show helper for ~1s
-        const has = this.opts.numberOfBookmarks > 0
         this.update()
+        const has = this.opts.numberOfBookmarks() > 0
         if (has) {
           this.myHeart.classList.add(this.opts.htmlClasses.heartIsHot)
           const delay = this.opts.heartsLoadingDelay ? this.opts.heartsLoadingDelay : 1000

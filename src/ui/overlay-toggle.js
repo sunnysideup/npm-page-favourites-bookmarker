@@ -3,12 +3,12 @@ export class OverlayToggle {
    * @param {{
    *  onClick:(e:Event)=>void,
    *  numberOfBookmarks:()=>number,
+   *  appendTo:HTMLElement,
    *  templates:{
    *    overlayToggle:Function
    *  },
    *  htmlClasses Record<string, string>,
    *  phrases Record<string, string>,
-   *  appendTo:HTMLElement,
    * }} opts
    **/
 
@@ -27,7 +27,6 @@ export class OverlayToggle {
     if (this.opts.appendTo) {
       const { outer, inner } = this.opts.templates.showOverlayToggle({
         onClick: (e) => this.opts.onClick(e),
-        numberOfBookmarks: () => this.opts.numberOfBookmarks(),
         htmlClasses: this.opts.htmlClasses,
         phrases: this.opts.phrases
       })

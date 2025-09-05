@@ -396,20 +396,20 @@ export class PageFaves {
       typeof this.opts.loadOnThisPage === 'boolean' ? this.opts.loadOnThisPage : !!this.opts.loadByDefault
     if (this.shouldLoad && !this.heart) {
       this.heart = new Heart({
+        numberOfBookmarks: () => this.state.list().length,
+        onClick: () => this.toggleCurrent(),
+        onShowOverlay: () => this.showOverlay(),
         appendTo: document.querySelector('.' + this.opts.htmlClasses.heartForCurrentPage) ?? document.body,
         position: {
           leftRight: this.opts.heartPositionLeftRight,
           topBottom: this.opts.heartPositionTopBottom
         },
-        isOn: () => this.isBookmarked(),
-        numberOfBookmarks: () => this.state.list().length,
-        onToggle: () => this.toggleCurrent(),
-        onShowOverlay: () => this.showOverlay(),
+        heartsLoadingDelay: this.opts.heartsLoadingDelay,
         templates: {
           heart: this.opts.templates.heart
         },
         htmlClasses: this.opts.htmlClasses,
-        heartsLoadingDelay: this.opts.heartsLoadingDelay
+        phrases: this.opts.phrases
       })
       this.heart.mount()
     } else {
@@ -418,14 +418,19 @@ export class PageFaves {
   }
 
   #createOtherPageHearts () {
-    this.otherHearts = HeartsOtherPages(
+    this.otherHearts = new HeartsOtherPages(
       {
-        isBookmarked: (url) => this.isBookmarked(url),
-        numberOfBookmarks: () => this.state.list().length,
-        onToggle: (ctx) => this.toggleFromElement(ctx?.el ?? null),
+        onClick: (ctx) => this.toggleFromElement(ctx?.el ?? null),
         onShowOverlay: () => this.showOverlay(),
-        template: this.opts.templates.heart,
-        htmlClasses: this.opts.htmlClasses
+        numberOfBookmarks: () => this.state.list().length,
+        // no appendTo - hearts are appended to their own elements
+        // no position - hearts are positioned via CSS
+        heartsLoadingDelay: this.opts.heartsLoadingDelay,
+        templates: {
+          heart: this.opts.templates.heart
+        },
+        htmlClasses: this.opts.htmlClasses,
+        phrases: this.opts.phrases
       }
     )
     this.otherHearts.mount()
@@ -453,9 +458,9 @@ export class PageFaves {
       onSync: (event) => this.syncFromServer(event),
       onShare: (event) => this.copyShareLink(event),
       // NEW: pass login awareness to overlay (for CTA)
-      isLoggedIn: () => !!this.opts.userIsLoggedIn,
-      loginUrl: this.opts.loginUrl,
       shareLink: () => this.state.getShareLink(),
+      userIsLoggedIn: !!this.opts.userIsLoggedIn,
+      loginUrl: this.opts.loginUrl,
       templates: {
         overlayBar: this.opts.templates.overlayBar,
         overlayShell: this.opts.templates.overlayShell,

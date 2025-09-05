@@ -2,24 +2,22 @@ import { Heart } from './heart.js'
 
 export class HeartsOtherPages {
   /**
-   * @param {{
+    * @param {{
+    *  onClick:(args:{url:string,title:string,description?:string,imagelink?:string,el:HTMLElement})=>void,
+    *  onShowOverlay:()=>void,
+    *  appendTo?:HTMLElement,
     *  position:null | {
     *    leftRight:'left'|'right',
     *    topBottom:'top'|'bottom'
     *  },
-    *  isBookmarked:(url:string)=>boolean,
-    *  numberOfBookmarks:()=>number,
-    *  onToggle:(args:{url:string,title:string,description?:string,imagelink?:string,el:HTMLElement})=>void,
-    *  onShowOverlay:()=>void,
     *  templates:{
     *    heart:Function
     *  },
     *  heartsOtherPagesSelector: null | string,
-    *  htmlClasses Record<string, string>,
-    *  phrases Record<string, string>,
-    *  appendTo?:HTMLElement,
-   * }} opts
-   */
+    *  htmlClasses: Record<string, string>,
+    *  phrases: Record<string, string>,
+    * }} opts
+    */
   constructor (opts) {
     this.opts = opts
     this.hearts = []
@@ -56,20 +54,22 @@ export class HeartsOtherPages {
     const { pfUrl: url, pfTitle: title, pfDescription: description, pfImagelink: imagelink } = el.dataset
 
     const heart = new Heart({
-      appendTo: el,
-      position: this.opts.position,
-      isOn: () => this.opts.isBookmarked(url),
-      numberOfBookmarks: () => Number(this.opts.numberOfBookmarks?.() ?? 0),
-      onToggle: () => this.opts.onToggle({ url, title, description, imagelink, el }),
+      onClick: () => this.opts.onToggle({ url, title, description, imagelink, el }),
       onShowOverlay: this.opts.onShowOverlay,
-      template: args => {
-        const node = this.opts.templates.heart(args)
-        node.classList.add(this.opts.htmlClasses.heartForAnotherPageInner)
-        return node
+      numberOfBookmarks: () => Number(this.opts.numberOfBookmarks?.() ?? 0),
+      appendTo: el,
+      heartsLoadingDelay: this.opts.heartsLoadingDelay,
+      templates: {
+        heart: args => {
+          const { wrap, heartBtn, showBtn } = this.opts.templates.heart(args)
+          wrap.classList.add(this.opts.htmlClasses.heartForAnotherPageInner)
+          return { wrap, heartBtn, showBtn }
+        }
       },
       htmlClasses: this.opts.htmlClasses,
       phrases: this.opts.phrases
     })
+
     heart.mount()
     if (alsoUpdate) {
       heart.update()

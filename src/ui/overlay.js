@@ -28,6 +28,14 @@ export class Overlay {
     return this.#isShown
   }
 
+  toggle () {
+    if (this.#isShown) {
+      this.hide()
+    } else {
+      this.show()
+    }
+  }
+
   show () {
     if(!this.#isShown) {
       this.mount()
@@ -38,9 +46,16 @@ export class Overlay {
     this.unmount()
   }
 
+  getEl() {
+    return this.el
+  }
+
+
   unmount() {
+    window.removeEventListener('keydown', this.#escListener)
     this.el?.remove()
     this.el = this.listEl = null
+    this.#escListener = null
     this.#isShown = false
   }
 
@@ -59,10 +74,21 @@ export class Overlay {
     this.el = wrap
     this.listEl = list
     this.#renderList()
+    this.#escListener = e => {
+      if (e.code === 'Escape') {
+        this.hide()
+      }
+    }
+    window.addEventListener('keydown', this.#escListener)
     this.#isShown = true
   }
 
+  update() {
+    this.#renderList()
+  }
+
   #renderList () {
+    // once mounted, it should not be falsy
     if (!this.listEl) return
     this.listEl.innerHTML = ''
     const frag = document.createDocumentFragment()
@@ -77,4 +103,8 @@ export class Overlay {
     })
     this.listEl.appendChild(frag)
   }
+
+  #escListener = null
+
+
 }

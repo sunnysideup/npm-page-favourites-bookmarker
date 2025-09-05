@@ -1,39 +1,101 @@
+//classes
 import { State } from './core/state.js'
 import { Net } from './core/net.js'
-import { defaultTemplates } from './ui/templates.js'
-import { attachOtherPagesHearts } from './ui/hearts-other-pages.js'
+import { HeartsOtherPages } from './ui/hearts-other-pages.js'
 import { Heart } from './ui/heart.js'
 import { Overlay } from './ui/overlay.js'
+import { OverlayToggle } from './ui/overlay-toggle.js'
+
+// functions
 import { deepMerge, toRelativeUrl,toAbsoluteUrl } from './core/utils.js'
 
+// objects
+import { defaultTemplates } from './definitions/templates.js'
+import { phrases } from "./lang/phrases.js"
+import { htmlClasses } from "./definitions/html-classes.js"
 export class PageFaves {
 
   static DEFAULTS = {
+    // templates
+    templates: defaultTemplates, // templates
+    phrases: phrases, // phrases
+
+    // class names
+    classNames: {
+      heartIsHot: 'pf-heart-is-hot',
+      showBookmarks: 'pf-show-bookmarks',
+      numberOfBookmarks: 'pf-number-of-bookmarks',
+      heartWrap: 'pf-heart-wrap',
+      heart: 'pf-heart',
+      bar: 'pf-bar',
+      title: 'pf-title',
+      btn: 'pf-btn',
+      login: 'pf-login',
+      share: 'pf-share',
+      close: 'pf-close',
+      overlay: 'pf-overlay',
+      list: 'pf-list',
+      row: 'pf-row',
+      sort: 'pf-sort',
+      link: 'pf-link',
+      del: 'pf-del',
+      on: 'pf-on',
+      off: 'pf-off',
+      heartForAnotherPage: 'pf-heart-for-another-page',
+      heartForAnotherPageInner: 'pf-heart-for-another-page-inner',
+      noBookmarks: 'pf-no-bookmarks',
+      hasBookmarks: 'pf-has-bookmarks',
+      heartForCurrentPage: 'pf-heart-for-current-page',
+    },
+
+    // does it load?
     loadByDefault: true, // load on page?
     loadOnThisPage: undefined, // load on this specific page?
+
+    // syncs and merge:
+
+    syncOnLoad: false, // do we sync with server at all?
+    mergeOnLoad: undefined,
+
+    // heart this page
     heartPositionLeftRight: 'right', // position of heart icon
     heartPositionTopBottom: 'bottom', // position of heart icon
-    overlayHotkey: 'KeyB', // key used to show / hide overlay
     heartingHotkey: 'KeyH', // key used to (un)heart the current page
+    heartsLoadingDelay: 1000, // in ms, how long hearts stay 'hot' after being clicked
+
+    // current page
+    currentPageUrl: undefined,
+    currentPageTitle: undefined,
+    currentPageImagelink: undefined,
+    currentPageDescription: undefined,
+    selectorForTitle: 'h1', // e.g. h1
+
+    // overlay
+    overlayHotkey: 'KeyB', // key used to show / hide overlay
+
+    // storage
     storage: 'local', // how to store data
     storageKey: 'pf_store', // storage key
     nameOfTemporarySharedStore: 'pf_store_share_bookmark_list',  // name of temporary shared store for sharing data
+    mode: 'local',
+    nameOfStore: 'pf_store',
+    nameOfTemporarySharedStore: 'pf_store_share_bookmark_list',
+
+    // server
     baseUrl: '', // base url for all links
     endpoints: {
       events: 'events',
       bookmarks: 'bookmarks'
     },
-    // NEW: login + throttling
+    timeout: undefined, // in ms
+    headers: undefined, // additional headers for net requests
+    credentials: undefined, // e.g. 'include' for cookies
+    fetch: undefined, // custom fetch implementation
+
+    // login
     userIsLoggedIn: false,
     loginUrl: '',
-    syncOnLoad: false, // do we sync with server at all?
-    templates: defaultTemplates,
-    currentPageUrl: undefined,
-    currentPageTitle: undefined,
-    currentPageImagelink: undefined,
-    currentPageDescription: undefined,
-    mergeOnLoad: undefined,
-    selectorForTitle: 'h1' // e.g. h1
+
   }
 
   isInSync = false
@@ -212,10 +274,9 @@ export class PageFaves {
   }
 
   toggleCurrent () {
-    this.isBookmarked() ? this.removeCurrent() : this.addCurrent()
+    if(this.shouldLoad === false) return false
+    return this.isBookmarked() ? this.removeCurrent() : this.addCurrent()
   }
-
-  #escListener = null
 
   showOverlay () {
     if (this.overlay.isShown()) {
@@ -316,7 +377,7 @@ export class PageFaves {
 
   async shareFromServer () {
     await this.syncFromServer()
-    this.overlay.renderList()
+    this.overlay.update()
   }
 
   // Private
@@ -344,15 +405,6 @@ export class PageFaves {
     }
   }
 
-  #canServer () {
-    return !!this.net?.baseUrl
-  }
-
-  async #syncIfStale () {
-    if (this.isInSync === true) return
-    await this.syncFromServer()
-  }
-
   #setupState(){
     this.state = new State({
       storage: this.opts.storage,
@@ -369,11 +421,18 @@ export class PageFaves {
   }
 
   #createHearts() {
+    this.#createPageHeart()
+    this.#createOtherPageHearts()
+    this.allHearts = [this.heart, ...(this.otherHearts ?? [])].filter(Boolean)
+  }
+
+
+  #createPageHeart() {
     this.shouldLoad =
       typeof this.opts.loadOnThisPage === 'boolean' ? this.opts.loadOnThisPage : !!this.opts.loadByDefault
     if (this.shouldLoad && !this.heart) {
       this.heart = new Heart({
-        appendTo: document.querySelector('.pf-heart-for-current-page') ?? document.body,
+        appendTo: document.querySelector(this.opts.classNames.heartForCurrentPage) ?? document.body,
         position: {
           leftRight: this.opts.heartPositionLeftRight,
           topBottom: this.opts.heartPositionTopBottom
@@ -383,22 +442,30 @@ export class PageFaves {
         onToggle: () => this.toggleCurrent(),
         onShowOverlay: () => this.showOverlay(),
         template: this.opts.templates.heart,
+        classNames: this.opts.classNames,
+        heartsLoadingDelay: this.opts.heartsLoadingDelay
       })
+      this.heart.mount()
     } else {
       this.heart = null
     }
 
-    this.otherHearts = attachOtherPagesHearts(
+  }
+
+  #createOtherPageHearts() {
+
+    const heartsOtherPages = HeartsOtherPages(
       {
         isBookmarked: (url) => this.isBookmarked(url),
         numberOfBookmarks: () => this.state.list().length,
         onToggle: (ctx) => this.toggleFromElement(ctx?.el ?? null),
         onShowOverlay: () => this.showOverlay(),
         template: this.opts.templates.heart,
-      },
-      document
+        classNames: this.opts.classNames,
+      }
     )
-    this.allHearts = [this.heart, ...(this.otherHearts ?? [])].filter(Boolean)
+    heartsOtherPages.mount()
+    this.otherHearts = heartsOtherPages.getEls()
   }
 
   #createOverlay() {
@@ -406,14 +473,14 @@ export class PageFaves {
       getList: () => this.state.list(),
       onRemove: url => {
         this.remove(url)
-        this.overlay.renderList()
+        this.overlay.update()
         this.updateScreen()
       },
       // CHANGED: ping on reorder too
       onReorder: (from, to) => {
         this.state.reorder(from, to)
         this.#ping('reordered', { from, to })
-        this.overlay.renderList()
+        this.overlay.update()
       },
       onClose: (event) => this.hideOverlay(event),
       onSync: (event) => this.syncFromServer(event),
@@ -426,7 +493,8 @@ export class PageFaves {
         overlayBar: this.opts.templates.overlayBar,
         overlayShell: this.opts.templates.overlayShell,
         overlayRow: this.opts.templates.overlayRow
-      }
+      },
+      classNames: this.opts.classNames,
     })
   }
 
@@ -435,6 +503,7 @@ export class PageFaves {
       onClick: (e) => { e.preventDefault(); e.stopPropagation(); this.showOverlay() },
       numberOfBookmarks: () => this.state.list().length
     })
+    this.overlayToggle.mount()
   }
 
   #getCurrentTitle () {
@@ -444,6 +513,15 @@ export class PageFaves {
       document.title ||
       ''
     )
+  }
+
+  #canServer () {
+    return !!this.net?.baseUrl
+  }
+
+  async #syncIfStale () {
+    if (this.isInSync === true) return
+    await this.syncFromServer()
   }
 
   #queue = []

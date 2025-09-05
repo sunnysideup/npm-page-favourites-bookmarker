@@ -5,11 +5,16 @@ import { makeAlphaNumCode, sanitizeHtml, stripTags, toRelativeUrl } from './util
 
 export class State {
   /**
-   * @param {{storage:'local'|'session', storageKey:string}} opts
+   * @param {
+   *   {
+   *     storage:'local'|'session',
+   *     storageKey:string
+   *   }
+   * } opts
    */
-  constructor (opts) {
+  constructor (opts = {}) {
     this.opts = opts
-    this.store = new Store(opts.storage, opts.storageKey) // use caller's choice
+    this.store = new Store(opts) // use caller's choice
     this.bookmarkStorageKey = opts.storageKey + '_bookmarks'
     this.codeStorageKey = opts.storageKey + '_code'
     this.shareLinkStorageKey = opts.storageKey + '_share_link'

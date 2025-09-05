@@ -1,6 +1,6 @@
 import { Heart } from './heart.js'
 
-export class HeartOtherPages {
+export class HeartsOtherPages {
   /**
    * @param {{
     *  position:null | {
@@ -21,6 +21,8 @@ export class HeartOtherPages {
     *    isOn:()=>boolean,
     *    numberOfBookmarks:()=>number
     *  })=>HTMLElement,
+    *  classNames:object,
+    *  phrases:object,
     *  appendTo?:HTMLElement,
    * }} opts
    */
@@ -35,7 +37,7 @@ export class HeartOtherPages {
 
   mount() {
     /** @type {Heart[]} */
-    this.hearts = [...root.querySelectorAll('.pf-heart-for-another-page')]
+    this.hearts = [...root.querySelectorAll(this.opts.classNames.heartForAnotherPage)]
       .map(el => this.#createAndMountHeart(el))
       .filter(this.#isHeart)      // keep only real Heart instances
     return this.hearts
@@ -65,7 +67,7 @@ export class HeartOtherPages {
       onShowOverlay: this.opts.onShowOverlay,
       template: args => {
         const node = this.opts.template(args)
-        node.classList.add('pf-heart--other-pages')
+        node.classList.add(this.opts.classNames.heartForAnotherPageInner)
         return node
       }
     })

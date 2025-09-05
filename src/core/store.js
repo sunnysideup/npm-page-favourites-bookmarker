@@ -39,15 +39,18 @@ class LocalStore {
 // Hybrid + cross-tab sync
 export class Store {
   /**
-   * @param {'local'|'session'} mode
-   * @param {string} nameOfStore
-   * @param {string} nameOfTemporarySharedStore
+    * @param {{
+    *   mode: 'local'|'session'
+    *   nameOfStore?: string
+    *   nameOfTemporarySharedStore?: string
+    * }} opts
    */
-  constructor (mode = 'local', nameOfStore = 'pf_store', nameOfTemporarySharedStore = 'pf_store_share_bookmark_list') {
-    this.mode = mode
-    this.nameOfStore = nameOfStore
-    this.nameOfTemporarySharedStore = nameOfTemporarySharedStore
-    this.primary = this.#detectPrimary(mode)
+  constructor (opts = {}) {
+    this.opts = opts
+    this.mode = opts.mode || 'local'
+    this.nameOfStore = opts.nameOfStore || 'pf_store'
+    this.nameOfTemporarySharedStore = opts.nameOfTemporarySharedStore || 'pf_store_share_bookmark_list'
+    this.primary = this.#detectPrimary(this.mode)
     this.fallback = new CookieStore()
     this.listeners = new Set()
 

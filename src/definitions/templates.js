@@ -1,141 +1,129 @@
 export const defaultTemplates = {
 
-  showOverlayToggle: ({ onClick, numberOfBookmarks }) => {
+  showOverlayToggle: ({ onClick, classNames, phrases }) => {
     const btn = document.createElement('button')
-    btn.className = 'pf-show-bookmarks'
-    btn.setAttribute('aria-label', 'Show favourites list')
-    btn.title = 'Show favourites'
-    btn.textContent = '❤'
-    const span = document.createElement('span')
-    span.className = 'pf-number-of-bookmarks'
-    span.textContent = String(numberOfBookmarks?.() ?? 0)
-    btn.appendChild(span)
+    btn.className = classNames.showBookmarks
+    btn.setAttribute('aria-label', phrases.showFavouritesListLabel)
+    btn.title = phrases.showFavouritesTitle
+    btn.textContent = phrases.heartSymbol
     btn.addEventListener('click', e => onClick(e))
-    return btn
+
+    const span = document.createElement('span')
+    span.className = classNames.numberOfBookmarks
+    btn.appendChild(span)
+
+    return { btn, span }
   },
 
-  heart: ({ onClick, onShowOverlay, position, isOn, numberOfBookmarks }) => {
+  heart: ({ onClick, onShowOverlay, position, classNames, phrases }) => {
     const wrap = document.createElement('div')
-    wrap.className = 'pf-heart-wrap'
+    wrap.className = classNames.heartWrap
     if (position) {
       wrap.classList.add(`pf-heart-wrap--${position.leftRight === 'left' ? 'left' : 'right'}`)
       wrap.classList.add(`pf-heart-wrap--${position.topBottom === 'top' ? 'top' : 'bottom'}`)
     }
 
     const showBtn = document.createElement('button')
-    showBtn.className = 'pf-show-bookmarks'
-    showBtn.setAttribute('aria-label', 'Show favourites list')
-    showBtn.title = 'Show favourites'
-    showBtn.textContent = '☰'
-    showBtn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); onShowOverlay?.() })
-    if ((numberOfBookmarks?.() ?? 0) < 1) showBtn.style.display = 'none'
+    showBtn.className = classNames.showBookmarks
+    showBtn.title = phrases.showFavouritesTitle
+    showBtn.textContent = phrases.menuSymbol
+    showBtn.setAttribute('aria-label', phrases.showFavouritesListLabel)
+    showBtn.addEventListener('click', (e) => onShowOverlay(e))
     wrap.appendChild(showBtn)
 
-    const btn = document.createElement('button')
-    btn.className = 'pf-heart'
-    btn.setAttribute('aria-label', 'Toggle bookmark')
+    const heartBtn = document.createElement('button')
+    heartBtn.className = classNames.heart
+    heartBtn.textContent = phrases.heartSymbol
+    heartBtn.setAttribute('aria-label', phrases.toggleBookmarkLabel)
+    heartBtn.addEventListener('click', (e) => onClick(e))
+    wrap.appendChild(heartBtn)
 
-    btn.addEventListener('click', (e) => onClick(e));
-
-    wrap.appendChild(btn)
-
-    return wrap
+    return { wrap, heartBtn, showBtn }
   },
 
   overlayBar: ({
     onClose,
-    onSync,
     onShare,
     isLoggedIn,
     loginUrl,
-    shareLink
+    shareLink,
+    classNames,
+    phrases
   }) => {
     const bar = document.createElement('div')
-    bar.className = 'pf-bar'
+    bar.className = classNames.bar
 
     // title
     const title = document.createElement('strong')
-    title.className = 'pf-title'
-    title.textContent = 'Favourites'
+    title.className = classNames.title
+    title.textContent = phrases.favouritesTitle
     bar.appendChild(title)
 
     // login call to action
     if (loginUrl && !isLoggedIn()) {
       const login = document.createElement('a')
-      login.className = 'pf-btn pf-login'
+      login.className = `${classNames.btn} ${classNames.login}`
       login.href = loginUrl
-      login.textContent = 'save'
-
+      login.textContent = phrases.saveText
       bar.append(login)
     }
-
-    // sync button
-    // const sync = document.createElement('button')
-    // sync.className = 'pf-btn pf-sync'
-    // sync.type = 'button'
-    // sync.textContent = 'Sync'
-    // sync.addEventListener('click', onSync)
-    // sync.title = 'Sync with server'
-    // sync.setAttribute('aria-label', 'Sync with server')
-    // bar.append(sync)
 
     // share button
     if (shareLink) {
       const share = document.createElement('button')
-      share.className = 'pf-btn pf-share'
+      share.className = `${classNames.btn} ${classNames.share}`
       share.type = 'button'
-      share.textContent = 'share'
-      share.setAttribute('aria-label', 'Share favourites list by copying link to clipboard')
-      share.addEventListener('click', (e) => onShare(e));
+      share.textContent = phrases.shareText
+      share.setAttribute('aria-label', phrases.shareLabel)
+      share.addEventListener('click', (e) => onShare(e))
       bar.append(share)
     }
 
     // universal close button
     const close = document.createElement('button')
-    close.className = 'pf-btn pf-close'
-    close.title = 'Close'
+    close.className = `${classNames.btn} ${classNames.close}`
     close.type = 'button'
-    close.textContent = '×'
-    close.setAttribute('aria-label', 'Close favourites list')
-    close.addEventListener('click', (e) => onClose(e) )
+    close.title = phrases.closeTitle
+    close.textContent = phrases.closeSymbol
+    close.setAttribute('aria-label', phrases.closeLabel)
+    close.addEventListener('click', (e) => onClose(e))
     bar.appendChild(close)
-    //
+
     return bar
   },
 
-  overlayShell: () => {
+  overlayShell: ({ classNames, phrases}) => {
     const wrap = document.createElement('section')
-    wrap.className = 'pf-overlay'
+    wrap.className = classNames.overlay
     const list = document.createElement('div')
-    list.className = 'pf-list'
+    list.className = classNames.list
     wrap.append(list)
     return { wrap, list }
   },
 
-  overlayRow: ({ item, index, onRemove, onReorder }) => {
+  overlayRow: ({ item, index, onRemove, onReorder, classNames, phrases }) => {
     const row = document.createElement('div')
-    row.className = 'pf-row'
+    row.className = classNames.row
     row.draggable = true
 
     const drag = document.createElement('span')
-    drag.className = 'pf-sort'
-    drag.title = 'Drag'
-    drag.textContent = '⋮'
+    drag.className = classNames.sort
+    drag.title = phrases.dragTitle
+    drag.textContent = phrases.dragSymbol
 
     const a = document.createElement('a')
-    a.className = 'pf-link'
+    a.className = classNames.link
     a.href = item.url
     a.target = '_blank'
     a.rel = 'noopener'
     a.textContent = item.title || item.url
 
     const del = document.createElement('button')
-    del.className = 'pf-btn pf-del'
+    del.className = `${classNames.btn} ${classNames.del}`
     del.type = 'button'
-    del.textContent = '❤'
+    del.textContent = phrases.heartSymbol
     del.addEventListener('click', () => onRemove(item.url))
 
-    // optional image
     let img
     if (item.imagelink) {
       img = document.createElement('img')
@@ -145,14 +133,12 @@ export const defaultTemplates = {
       img.loading = 'lazy'
     }
 
-    // optional description
     let p
     if (item.description) {
       p = document.createElement('p')
       p.textContent = item.description
     }
 
-    // build
     row.append(
       drag,
       ...(img ? [img] : []),

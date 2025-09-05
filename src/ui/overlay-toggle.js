@@ -24,13 +24,13 @@ export class OverlayToggle {
   }
 
   mount () {
-    this.el = this.opts.templates.overlayToggle({
+    const {outer, inner} = this.opts.templates.showOverlayToggle({
       onClick: (e) => this.opts.onClick(e),
       numberOfBookmarks: () => this.opts.numberOfBookmarks()
     })
-    this.innerSpan = this.el.querySelector('.pf-number-of-bookmarks')
-    this.opts.appendTo.appendChild(this.el)
-    return this.el
+    this.opts.appendTo.appendChild(outer)
+    this.innerSpan = inner
+    return outer
   }
 
   update () {
@@ -46,11 +46,11 @@ export class OverlayToggle {
       }
     }
     if(numberOfBookmarks > 0) {
-      this.el.className.remove( 'pf-no-bookmarks')
-      this.el.className.add( 'pf-has-bookmarks')
+      this.el.className.remove(this.classNames.noBookmarks)
+      this.el.className.add( this.classNames.hasBookmarks)
     } else {
-      this.el.className.add( 'pf-no-bookmarks')
-      this.el.className.remove( 'pf-has-bookmarks')
+      this.el.className.add( this.classNames.noBookmarks)
+      this.el.className.remove( this.classNames.hasBookmarks)
     }
   }
 }

@@ -12,11 +12,13 @@ export class Heart {
    *  heartsLoadingDelay?:number,
    *  appendTo?:HTMLElement,
    *  template:(args:{})=>HTMLElement
+   *  classNames:object,
+   *  phrases:object,
    * }} opts
    */
   constructor (opts) {
     this.opts = opts
-    this.myHeart = null
+    this.unmount()
   }
 
   getEl() {
@@ -25,48 +27,53 @@ export class Heart {
 
   mount () {
     if (this.myHeart) return
-    this.myHeart = this.opts.template({
+    const {wrap, heartButton, showBtn} = this.opts.template({
       onClick: e => {
         this.opts.onToggle()
         // show helper for ~1s
         const has = this.opts.numberOfBookmarks > 0
         this.update()
         if (has) {
-          this.myHeart.classList.add('pf-show-temp')
+          this.myHeart.classList.add(this.opts.classNames.heartIsHot)
           const delay = this.opts.heartsLoadingDelay ? this.opts.heartsLoadingDelay : 1000
-          setTimeout(() => this.myHeart?.classList.remove('pf-show-temp'), delay)
+          setTimeout(() => this.myHeart?.classList.remove(this.opts.classNames.heartIsHot), delay)
         }
       },
       onShowOverlay: this.opts.onShowOverlay,
       position: this.opts.position,
       isOn: this.opts.isOn,
-      numberOfBookmarks: this.opts.numberOfBookmarks
+      numberOfBookmarks: this.opts.numberOfBookmarks,
+      classNames: this.opts.classNames,
+      phrases: this.opts.phrases
     })
+    this.myHeart = wrap
+    this.heartBtn = heartButton
+    this.showBtn = showBtn
     (this.opts.appendTo || document.body).appendChild(this.myHeart)
     // this.update()
+    return this;
   }
 
   update () {
     if (!this.myHeart) return
-    const heartBtn = this.myHeart.matches('.pf-heart')
-      ? this.myHeart
-      : this.myHeart.querySelector('.pf-heart')
-    if (heartBtn) {
+
+    if (this.heartBtn) {
       const on = this.opts.isOn()
-      heartBtn.classList.toggle('pf-on', on)
-      heartBtn.textContent = on ? '❤' : '❤' // ♡♡♡♡
-      heartBtn.title = on ? 'Remove bookmark' : 'Add bookmark'
+      this.heartBtn.classList.toggle(this.opts.classNames.on, on)
+      this.heartBtn.textContent = on ? this.opts.phrases.heartOn : this.opts.phrases.heartOff
+      this.heartBtn.title = on ? this.opts.phrases.removeBookmark : this.opts.phrases.addBookmark
     }
-    const showBtn = this.myHeart.querySelector?.('.pf-show-bookmarks')
-    if (showBtn) {
+    if (this.showBtn) {
       const visible = this.opts.numberOfBookmarks() > 0
-      showBtn.style.display = visible ? '' : 'none'
+      this.showBtn.style.display = visible ? '' : 'none'
     }
   }
 
   unmount () {
     this.myHeart?.remove()
     this.myHeart = null
+    this.heartBtn = null
+    this.showBtn = null
   }
 }
 

@@ -92,7 +92,7 @@ export const defaultTemplates = Object.freeze({
     return bar
   },
 
-  overlayShell: ({ htmlClasses, phrases}) => {
+  overlayShell: ({ htmlClasses, phrases }) => {
     const wrap = document.createElement('section')
     wrap.className = htmlClasses.overlay
     const list = document.createElement('div')

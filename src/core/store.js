@@ -7,7 +7,7 @@ class CookieStore {
 
   set (k, v, days = 3650) {
     const exp = new Date(Date.now() + days * 864e5).toUTCString()
-    const secure = location.protocol === 'https:' ? '; Secure' : ''
+    const secure = window.location.protocol === 'https:' ? '; Secure' : ''
     document.cookie = `${encodeURIComponent(k)}=${encodeURIComponent(v)}; Path=/; Expires=${exp}; SameSite=Lax${secure}`
   }
 
@@ -24,10 +24,11 @@ class CookieStore {
 
 // Local/Session Storage backend (preferred)
 class LocalStore {
-  constructor (mode = 'local') {
-    this.mode = mode
-    this.backend = mode === 'session' ? window.sessionStorage : window.localStorage
+  constructor (storage = 'local') {
+    this.storage = storage
+    this.backend = storage === 'session' ? window.sessionStorage : window.localStorage
   }
+
   get (k) { try { return this.backend.getItem(k) } catch { return null } }
   set (k, v) { try { this.backend.setItem(k, v) } catch (e) { console.error('LocalStore set failed', e) } }
   remove (k) { try { this.backend.removeItem(k) } catch {} }
@@ -40,17 +41,17 @@ class LocalStore {
 export class Store {
   /**
     * @param {{
-    *   mode: 'local'|'session'
-    *   nameOfStore?: string
+    *   storage: 'local'|'session'
+    *   storageKey?: string
     *   nameOfTemporarySharedStore?: string
     * }} opts
    */
   constructor (opts = {}) {
     this.opts = opts
-    this.mode = opts.mode || 'local'
-    this.nameOfStore = opts.nameOfStore || 'pf_store'
+    this.storage = opts.storage || 'local'
+    this.storageKey = opts.storageKey || 'pf_store'
     this.nameOfTemporarySharedStore = opts.nameOfTemporarySharedStore || 'pf_store_share_bookmark_list'
-    this.primary = this.#detectPrimary(this.mode)
+    this.primary = this.#detectPrimary(this.storage)
     this.fallback = new CookieStore()
     this.listeners = new Set()
 
@@ -58,13 +59,14 @@ export class Store {
     window.addEventListener('storage', this._onStorage)
 
     try {
-      this.channel = 'BroadcastChannel' in window ? new BroadcastChannel(this.nameOfStore) : null
-      this._onMessage = (e) => { if (e?.data?.type === this.nameOfStore + '-changed') this.#emit(e.data.key) }
+      this.channel = 'BroadcastChannel' in window ? new BroadcastChannel(this.storageKey) : null
+      this._onMessage = (e) => { if (e?.data?.type === this.storageKey + '-changed') this.#emit(e.data.key) }
       this.channel?.addEventListener('message', this._onMessage)
     } catch { this.channel = null }
   }
 
   destroy () {
+    // must be window!
     window.removeEventListener('storage', this._onStorage)
     if (this.channel) {
       this.channel.removeEventListener('message', this._onMessage)
@@ -75,10 +77,9 @@ export class Store {
   }
 
   onChange (fn) {
-    this.listeners.add(fn);
+    this.listeners.add(fn)
     return () => this.listeners.delete(fn)
   }
-
 
   // Sharing helpers (kept in local storage)
   getTemporarySharedData () {
@@ -92,39 +93,39 @@ export class Store {
 
   removeTemporarySharedData () {
     window.localStorage.removeItem(this.nameOfTemporarySharedStore)
-    this.channel?.postMessage({ type: this.nameOfStore + '-changed', key: this.nameOfTemporarySharedStore })
+    this.channel?.postMessage({ type: this.storageKey + '-changed', key: this.nameOfTemporarySharedStore })
     this.#emit(this.nameOfTemporarySharedStore)
     return true
   }
 
   get (k) {
     const v = this.primary.get(k)
-    return v != null ? v : (this.mode === 'local' ? this.fallback.get(k) : null)
+    return v != null ? v : (this.storage === 'local' ? this.fallback.get(k) : null)
   }
 
   set (k, v) {
     this.primary.set(k, v)
-    if (this.mode === 'local') this.fallback.set(k, v) // remove if you don't want cookie mirror
-    this.channel?.postMessage({ type: this.nameOfStore + '-changed', key: k })
+    if (this.storage === 'local') this.fallback.set(k, v) // remove if you don't want cookie mirror
+    this.channel?.postMessage({ type: this.storageKey + '-changed', key: k })
     this.#emit(k)
   }
 
   remove (k) {
     this.primary.remove(k)
-    if (this.mode === 'local') this.fallback.remove(k)
-    this.channel?.postMessage({ type: this.nameOfStore + '-changed', key: k })
+    if (this.storage === 'local') this.fallback.remove(k)
+    this.channel?.postMessage({ type: this.storageKey + '-changed', key: k })
     this.#emit(k)
   }
 
   getJSON (k) {
     const v = this.primary.getJSON(k)
-    return v != null ? v : (this.mode === 'local' ? this.fallback.getJSON(k) : null)
+    return v != null ? v : (this.storage === 'local' ? this.fallback.getJSON(k) : null)
   }
 
   setJSON (k, v) {
     this.primary.setJSON(k, v)
-    if (this.mode === 'local') this.fallback.setJSON(k, v)
-    this.channel?.postMessage({ type: this.nameOfStore + '-changed', key: k })
+    if (this.storage === 'local') this.fallback.setJSON(k, v)
+    this.channel?.postMessage({ type: this.storageKey + '-changed', key: k })
     this.#emit(k)
   }
 
@@ -137,10 +138,10 @@ export class Store {
     // intentionally not implemented here to avoid nuking unrelated keys
   }
 
-  #detectPrimary (mode) {
+  #detectPrimary (storage) {
     try {
-      const test = `__${this.nameOfStore}_${Math.random().toString(36).slice(2)}`
-      const store = new LocalStore(mode)
+      const test = `__${this.storageKey}_${Math.random().toString(36).slice(2)}`
+      const store = new LocalStore(storage)
       store.set(test, '1')
       const ok = store.get(test) === '1'
       store.remove(test)

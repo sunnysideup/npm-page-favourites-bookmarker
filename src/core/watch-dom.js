@@ -9,7 +9,7 @@ export class WatchDom {
   #onRemove
   #observeToggles
 
-  constructor({
+  constructor ({
     root = document,
     className,
     onAdd = () => {},
@@ -25,7 +25,7 @@ export class WatchDom {
     this.#observer = new MutationObserver(muts => this.#handle(muts))
   }
 
-  start() {
+  start () {
     this.#observer.observe(this.#root, {
       childList: true,
       subtree: true,
@@ -36,14 +36,14 @@ export class WatchDom {
     return this
   }
 
-  stop() {
+  stop () {
     this.#observer.disconnect()
     this.#added.clear()
     this.#removed.clear()
     this.#scheduled = false
   }
 
-  destroy() {
+  destroy () {
     // hard stop and drop references so GC can reclaim
     this.stop()
     this.#observer = null
@@ -52,20 +52,20 @@ export class WatchDom {
     this.#onRemove = null
   }
 
-  setCallbacks({ onAdd, onRemove } = {}) {
+  setCallbacks ({ onAdd, onRemove } = {}) {
     if (onAdd) this.#onAdd = onAdd
     if (onRemove) this.#onRemove = onRemove
     return this
   }
 
   // internals
-  #queueFlush() {
+  #queueFlush () {
     if (this.#scheduled) return
     this.#scheduled = true
     requestAnimationFrame(() => this.#flush())
   }
 
-  #flush() {
+  #flush () {
     this.#scheduled = false
     const addNow = Array.from(this.#added); this.#added.clear()
     const remNow = Array.from(this.#removed); this.#removed.clear()
@@ -73,7 +73,7 @@ export class WatchDom {
     for (const el of remNow) this.#onRemove?.(el)
   }
 
-  #handle(mutations) {
+  #handle (mutations) {
     const cls = this.#className
     for (const m of mutations) {
       if (m.type === 'childList') {

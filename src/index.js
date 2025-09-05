@@ -1,4 +1,4 @@
-//classes
+// classes
 import { State } from './core/state.js'
 import { Net } from './core/net.js'
 import { HeartsOtherPages } from './ui/hearts-other-pages.js'
@@ -8,20 +8,19 @@ import { WatchDom } from './core/watch-dom.js'
 import { OverlayToggle } from './ui/overlay-toggle.js'
 
 // functions
-import { deepMerge, toRelativeUrl,toAbsoluteUrl } from './core/utils.js'
+import { deepMerge, toRelativeUrl, toAbsoluteUrl } from './core/utils.js'
 
 // objects
 import { defaultTemplates } from './definitions/templates.js'
-import { phrases } from "./lang/phrases.js"
-import { htmlClasses } from "./definitions/html-classes.js"
+import { phrases } from './lang/phrases.js'
+import { htmlClasses } from './definitions/html-classes.js'
 
 export class PageFaves {
-
   static DEFAULTS = {
     // templates
     templates: defaultTemplates, // templates
-    phrases: phrases, // phrases
-    htmlClasses: htmlClasses, // class names
+    phrases, // phrases
+    htmlClasses, // class names
 
     // does it load?
     loadByDefault: true, // load on page?
@@ -41,7 +40,6 @@ export class PageFaves {
     // all hearts
     heartsLoadingDelay: 1000, // in ms, how long hearts stay 'hot' after being clicked
 
-
     // current page
     currentPageUrl: undefined,
     currentPageTitle: undefined,
@@ -55,10 +53,7 @@ export class PageFaves {
     // storage
     storage: 'local', // how to store data
     storageKey: 'pf_store', // storage key
-    nameOfTemporarySharedStore: 'pf_store_share_bookmark_list',  // name of temporary shared store for sharing data
-    mode: 'local',
-    nameOfStore: 'pf_store',
-    nameOfTemporarySharedStore: 'pf_store_share_bookmark_list',
+    nameOfTemporarySharedStore: 'pf_store_share_bookmark_list', // name of temporary shared store for sharing data
 
     // server
     baseUrl: '', // base url for all links
@@ -73,7 +68,7 @@ export class PageFaves {
 
     // login
     userIsLoggedIn: false,
-    loginUrl: '',
+    loginUrl: ''
 
   }
 
@@ -96,14 +91,10 @@ export class PageFaves {
     this.#createOverlay()
     this.#createOverlayToggle()
 
-    this.unsubscribe = this.state.onChange(() => {
-      this.updateScreen()
-    })
-
     if (this.state.mergeFromShareIfAvailable?.()) {
       this.showOverlay()
     }
-    this.#watchDomInit();
+    this.#watchDomInit()
   }
 
   #started = false
@@ -150,12 +141,12 @@ export class PageFaves {
           start()
         }
         interactionEvents.forEach(evt =>
-          addEventListener(evt, fire, { once: true, passive: true, signal })
+          document.addEventListener(evt, fire, { once: true, passive: true, signal })
         )
       }
 
       if (waitForLoad && document.readyState !== 'complete') {
-        addEventListener('load', schedule, { once: true })
+        document.addEventListener('load', schedule, { once: true })
       } else {
         schedule()
       }
@@ -164,7 +155,7 @@ export class PageFaves {
     return this.#initPromise
   }
 
-  updateScreen() {
+  updateScreen () {
     this.allHearts.forEach(h => h.update())
     this.overlayToggle?.update()
   }
@@ -187,13 +178,12 @@ export class PageFaves {
     this.#bindHotkeys()
   }
 
-
   addCurrent () {
     return this.add(
       this.opts.currentPageUrl || window.location.href,
       this.#getCurrentTitle(),
       this.opts.currentPageImagelink || '',
-      this.opts.currentPageDescription ||  ''
+      this.opts.currentPageDescription || ''
     )
   }
 
@@ -202,12 +192,12 @@ export class PageFaves {
   }
 
   toggleCurrent () {
-    if(this.shouldLoad === false) return false
+    if (this.shouldLoad === false) return false
     return this.isBookmarked() ? this.removeCurrent() : this.addCurrent()
   }
 
   isBookmarked (url = '') {
-    if(!url) {
+    if (!url) {
       url = this.opts.currentPageUrl || window.location.href
     }
     return this.state.has(toRelativeUrl(url))
@@ -226,10 +216,9 @@ export class PageFaves {
     return this.add(url, title, imagelink, description)
   }
 
-
   add (url, title, imagelink = '', description = '') {
     url = toRelativeUrl(url)
-    if(!url) return false
+    if (!url) return false
     const isOk = this.state.add(url, title, imagelink, description)
     if (isOk) this.#ping('added', { url, title, imagelink, description })
     return isOk
@@ -237,12 +226,11 @@ export class PageFaves {
 
   remove (url) {
     url = toRelativeUrl(url)
-    if(!url) return false
+    if (!url) return false
     const isOk = this.state.remove(url)
     if (isOk) this.#ping('removed', { url })
     return isOk
   }
-
 
   list () {
     return this.state.list()
@@ -252,7 +240,7 @@ export class PageFaves {
     return this.state.list().length
   }
 
-  toggleOverlay() {
+  toggleOverlay () {
     if (this.overlay.isShown()) {
       return this.overlay.hide()
     } else {
@@ -269,7 +257,6 @@ export class PageFaves {
       return this.overlay.hide()
     }
   }
-
 
   async syncFromServer () {
     if (!this.#canServer()) return
@@ -326,7 +313,7 @@ export class PageFaves {
     this.#started = false
 
     if (this.#hotkeyListeners) {
-      window.removeEventListener('keydown', this.#hotkeyListeners)
+      document.removeEventListener('keydown', this.#hotkeyListeners)
       this.#hotkeyListeners = null
     }
     this.#watchDom?.destroy()
@@ -359,7 +346,7 @@ export class PageFaves {
   }
 
   #bindHotkeys () {
-    if(this.#hotkeyListeners === null) {
+    if (this.#hotkeyListeners === null) {
       this.#hotkeyListeners = (e) => {
         const tag = (e.target && e.target.tagName) || ''
         if (e.repeat) return
@@ -376,33 +363,35 @@ export class PageFaves {
           }
         }
       }
-      window.addEventListener('keydown', this.#hotkeyListeners)
+      document.addEventListener('keydown', this.#hotkeyListeners)
     }
   }
 
-  #setupState(){
+  #setupState () {
     this.state = new State({
       storage: this.opts.storage,
       storageKey: this.opts.storageKey,
       nameOfTemporarySharedStore: this.opts.nameOfTemporarySharedStore
     })
+    this.unsubscribe = this.state.onChange(() => {
+      this.updateScreen()
+    })
   }
 
-  #setupNet(){
+  #setupNet () {
     this.net = new Net({
       baseUrl: this.opts.baseUrl,
       endpoints: this.opts.endpoints
     })
   }
 
-  #createHearts() {
+  #createHearts () {
     this.#createPageHeart()
     this.#createOtherPageHearts()
     this.#setAllHearts()
   }
 
-
-  #createPageHeart() {
+  #createPageHeart () {
     this.shouldLoad =
       typeof this.opts.loadOnThisPage === 'boolean' ? this.opts.loadOnThisPage : !!this.opts.loadByDefault
     if (this.shouldLoad && !this.heart) {
@@ -417,7 +406,7 @@ export class PageFaves {
         onToggle: () => this.toggleCurrent(),
         onShowOverlay: () => this.showOverlay(),
         templates: {
-          heart: this.opts.templates.heart,
+          heart: this.opts.templates.heart
         },
         htmlClasses: this.opts.htmlClasses,
         heartsLoadingDelay: this.opts.heartsLoadingDelay
@@ -426,10 +415,9 @@ export class PageFaves {
     } else {
       this.heart = null
     }
-
   }
 
-  #createOtherPageHearts() {
+  #createOtherPageHearts () {
     this.otherHearts = HeartsOtherPages(
       {
         isBookmarked: (url) => this.isBookmarked(url),
@@ -437,17 +425,17 @@ export class PageFaves {
         onToggle: (ctx) => this.toggleFromElement(ctx?.el ?? null),
         onShowOverlay: () => this.showOverlay(),
         template: this.opts.templates.heart,
-        htmlClasses: this.opts.htmlClasses,
+        htmlClasses: this.opts.htmlClasses
       }
     )
     this.otherHearts.mount()
   }
 
-  #setAllHearts() {
+  #setAllHearts () {
     this.allHearts = [this.heart, ...(this.otherHearts?.getHearts() || [])].filter(Boolean)
   }
 
-  #createOverlay() {
+  #createOverlay () {
     this.overlay = new Overlay({
       getList: () => this.state.list(),
       onRemove: url => {
@@ -478,7 +466,7 @@ export class PageFaves {
     })
   }
 
-  #createOverlayToggle() {
+  #createOverlayToggle () {
     this.overlayToggle = new OverlayToggle({
       onClick: (e) => { e.preventDefault(); e.stopPropagation(); this.showOverlay() },
       numberOfBookmarks: () => this.state.list().length,
@@ -487,7 +475,7 @@ export class PageFaves {
         showOverlayToggle: this.opts.templates.showOverlayToggle
       },
       htmlClasses: this.opts.htmlClasses,
-      phrases: this.opts.phrases,
+      phrases: this.opts.phrases
     })
     this.overlayToggle.mount()
   }
@@ -510,7 +498,7 @@ export class PageFaves {
     await this.syncFromServer()
   }
 
-  #watchDomInit() {
+  #watchDomInit () {
     if (this.#watchDom) return
     if (!this.otherHearts) return
 
@@ -532,5 +520,4 @@ export class PageFaves {
       observeToggles: false
     }).start()
   }
-
 }

@@ -1,7 +1,4 @@
-import { htmlClasses } from "../definitions/html-classes"
-
 export class OverlayToggle {
-
   /**
    * @param {{
    *  onClick:(e:Event)=>void,
@@ -20,15 +17,15 @@ export class OverlayToggle {
     this.opts = opts
   }
 
-  unmount() {
+  unmount () {
     this.el?.remove()
     this.el = null
     this.innerSpan = null
   }
 
   mount () {
-    if(this.opts.appendTo) {
-      const {outer, inner} = this.opts.templates.showOverlayToggle({
+    if (this.opts.appendTo) {
+      const { outer, inner } = this.opts.templates.showOverlayToggle({
         onClick: (e) => this.opts.onClick(e),
         numberOfBookmarks: () => this.opts.numberOfBookmarks(),
         htmlClasses: this.opts.htmlClasses,
@@ -40,18 +37,18 @@ export class OverlayToggle {
   }
 
   update () {
-    if(!this.el) {
+    if (!this.el) {
       return
     }
-    if(numberOfBookmarks > 0) {
-      this.el.className.remove(this.opts.htmlClasses.noBookmarks)
-      this.el.className.add( this.opts.htmlClasses.hasBookmarks)
-    } else {
-      this.el.className.add( this.opts.htmlClasses.noBookmarks)
-      this.el.className.remove( this.opts.htmlClasses.hasBookmarks)
-    }
     const numberOfBookmarks = this.opts.numberOfBookmarks()
-    if(this.innerSpan) {
+    if (numberOfBookmarks > 0) {
+      this.el.className.remove(this.opts.htmlClasses.noBookmarks)
+      this.el.className.add(this.opts.htmlClasses.hasBookmarks)
+    } else {
+      this.el.className.add(this.opts.htmlClasses.noBookmarks)
+      this.el.className.remove(this.opts.htmlClasses.hasBookmarks)
+    }
+    if (this.innerSpan) {
       if (numberOfBookmarks > 0) {
         this.innerSpan.textContent = String(numberOfBookmarks)
         this.innerSpan.style.display = ''

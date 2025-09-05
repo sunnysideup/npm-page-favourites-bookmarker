@@ -23,14 +23,13 @@ export class HeartsOtherPages {
   constructor (opts) {
     this.opts = opts
     this.hearts = []
-
   }
 
-  getHearts() {
+  getHearts () {
     return this.hearts.map(heart => heart).filter(this.#isHeart) || []
   }
 
-  mount() {
+  mount () {
     this.unmount()
     const outerSelector = this.opts.heartsOtherPagesSelector || 'body'
     const outerHeartsContainer = document.querySelector(outerSelector) || document.body
@@ -41,11 +40,11 @@ export class HeartsOtherPages {
     return this.hearts
   }
 
-  update() {
+  update () {
     this.hearts.forEach(heart => heart.update())
   }
 
-  unmount() {
+  unmount () {
     this.hearts.forEach(heart => heart.unmount())
     this.hearts = []
   }
@@ -72,7 +71,7 @@ export class HeartsOtherPages {
       phrases: this.opts.phrases
     })
     heart.mount()
-    if(alsoUpdate) {
+    if (alsoUpdate) {
       heart.update()
     }
     this.hearts.push(heart)
@@ -80,11 +79,18 @@ export class HeartsOtherPages {
     return heart
   }
 
-  removeHeart(el) {
-
+  removeHeart (el) {
+    return this.hearts.find((heart, i) => {
+      if (heart.getEl() === el) {
+        heart.unmount()
+        this.hearts.splice(i, 1)
+        return true
+      }
+      return false
+    }) || null
   }
 
   #isHeart (heart) {
-    !!heart && heart instanceof Heart
+    return !!heart && heart instanceof Heart
   }
 }

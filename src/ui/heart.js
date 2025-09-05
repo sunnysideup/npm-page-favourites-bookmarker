@@ -23,13 +23,13 @@ export class Heart {
     this.opts = opts
   }
 
-  getEl() {
+  getEl () {
     return this.myHeart
   }
 
   mount () {
     if (this.myHeart) return
-    const {wrap, heartBtn, showBtn} = this.opts.template.heart({
+    const { wrap, heartBtn, showBtn } = this.opts.template.heart({
       onClick: e => {
         this.opts.onToggle()
         // show helper for ~1s
@@ -50,11 +50,11 @@ export class Heart {
     })
     this.myHeart = wrap
     this.heartBtn = heartBtn
-    this.showBtn = showBtn;
+    this.showBtn = showBtn
     const appendTo = this.opts.appendTo || document.body
     appendTo.appendChild(this.myHeart)
     // this.update()
-    return this;
+    return this
   }
 
   update () {
@@ -79,6 +79,3 @@ export class Heart {
     this.showBtn = null
   }
 }
-
-
-

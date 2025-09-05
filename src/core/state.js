@@ -1,7 +1,5 @@
-
 import { Store } from './store.js'
 import { makeAlphaNumCode, sanitizeHtml, stripTags, toRelativeUrl } from './utils.js'
-
 
 export class State {
   /**
@@ -59,7 +57,7 @@ export class State {
 
   has (url) {
     url = toRelativeUrl(url)
-    if(!url) return false
+    if (!url) return false
     return this.bookmarks.some(b => b.url === url)
   }
 
@@ -112,7 +110,6 @@ export class State {
     this.persist() // writes empties + emits change
     return true
   }
-
 
   setCodeAndShareLink (data) {
     this.#setCode(data.code || '')
@@ -214,6 +211,4 @@ export class State {
     const newDescription = sanitizeHtml(description)
     return { newUrl, newTitle, newImagelink, newDescription }
   }
-
-
 }

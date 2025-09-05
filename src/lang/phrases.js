@@ -4,7 +4,7 @@ export const phrases = Object.freeze({
   toggleBookmarkLabel: 'Toggle favourite',
   heartSymbol: '❤',
   heartOn: '❤',
-  heartOff: '❤',  // ♡♡♡♡
+  heartOff: '❤', // ♡♡♡♡
 
   favouritesTitle: 'Favourites',
 

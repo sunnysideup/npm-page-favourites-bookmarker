@@ -76,9 +76,9 @@ export class Net {
     }
   }
 
-  get (pathLike, opts)      { return this.request('GET', pathLike, opts) }
-  post (pathLike, body, o)  { return this.request('POST', pathLike, { ...o, body }) }
-  put (pathLike, body, o)   { return this.request('PUT', pathLike, { ...o, body }) }
+  get (pathLike, opts) { return this.request('GET', pathLike, opts) }
+  post (pathLike, body, o) { return this.request('POST', pathLike, { ...o, body }) }
+  put (pathLike, body, o) { return this.request('PUT', pathLike, { ...o, body }) }
   patch (pathLike, body, o) { return this.request('PATCH', pathLike, { ...o, body }) }
-  del (pathLike, opts)      { return this.request('DELETE', pathLike, opts) }
+  del (pathLike, opts) { return this.request('DELETE', pathLike, opts) }
 }

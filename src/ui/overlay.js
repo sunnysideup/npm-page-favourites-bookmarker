@@ -37,7 +37,7 @@ export class Overlay {
   }
 
   show () {
-    if(!this.#isShown) {
+    if (!this.#isShown) {
       this.mount()
     }
   }
@@ -46,13 +46,12 @@ export class Overlay {
     this.unmount()
   }
 
-  getEl() {
+  getEl () {
     return this.el
   }
 
-
-  unmount() {
-    window.removeEventListener('keydown', this.#escListener)
+  unmount () {
+    document.removeEventListener('keydown', this.#escListener)
     this.el?.remove()
     this.el = this.listEl = null
     this.#escListener = null
@@ -86,11 +85,11 @@ export class Overlay {
         this.hide()
       }
     }
-    window.addEventListener('keydown', this.#escListener)
+    document.addEventListener('keydown', this.#escListener)
     this.#isShown = true
   }
 
-  update() {
+  update () {
     this.#renderList()
   }
 
@@ -114,6 +113,4 @@ export class Overlay {
   }
 
   #escListener = null
-
-
 }

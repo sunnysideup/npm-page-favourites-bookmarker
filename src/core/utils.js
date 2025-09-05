@@ -9,7 +9,7 @@ export function deepMerge (...sources) {
     if (!isPlainObject(src)) continue
     for (const k of Object.keys(src)) {
       const v = src[k]
-      if (Array.isArray(v)) out[k] = Array.isArray(out[k]) ? [...out[k], ...v] : [...v]   // or: out[k] = [...v]
+      if (Array.isArray(v)) out[k] = Array.isArray(out[k]) ? [...out[k], ...v] : [...v] // or: out[k] = [...v]
       else out[k] = isPlainObject(v) && isPlainObject(out[k]) ? deepMerge(out[k], v) : v
     }
   }
@@ -24,11 +24,10 @@ export function makeAlphaNumCode (length = 12) {
     crypto.getRandomValues(rnd)
     for (let i = 0; i < length; i++) out.push(chars[rnd[i] % chars.length])
   } else {
-    for (let i = 0; i < length; i++) out.push(chars[Math.floor(Math.random()*chars.length)])
+    for (let i = 0; i < length; i++) out.push(chars[Math.floor(Math.random() * chars.length)])
   }
   return out.join('')
 }
-
 
 // Standardise to relative URLs only; drop or return '' if external
 export const toRelativeUrl = (url = '') => {

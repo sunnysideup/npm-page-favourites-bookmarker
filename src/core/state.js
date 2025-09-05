@@ -116,28 +116,6 @@ export class State {
     this.#setShareLink(data.shareLink || '')
   }
 
-  #setCode (code) {
-    if (typeof code !== 'string' || !code.trim()) {
-      if (!this.code) {
-        this.code = makeAlphaNumCode(12)
-      }
-    } else {
-      this.code = code.trim()
-    }
-    this.store.set(this.codeStorageKey, this.code)
-  }
-
-  #setShareLink (link) {
-    if (typeof link !== 'string' || !link.trim()) {
-      if (!this.shareLink) {
-        this.shareLink = ''
-      }
-    } else {
-      this.shareLink = link.trim()
-    }
-    this.store.set(this.shareLinkStorageKey, this.shareLink)
-  }
-
   getCode () {
     return this.code || this.store.get(this.codeStorageKey)
   }
@@ -190,6 +168,28 @@ export class State {
     }
     this.bookmarks = [...map.values()]
     this.persist()
+  }
+
+  #setCode (code) {
+    if (typeof code !== 'string' || !code.trim()) {
+      if (!this.code) {
+        this.code = makeAlphaNumCode(12)
+      }
+    } else {
+      this.code = code.trim()
+    }
+    this.store.set(this.codeStorageKey, this.code)
+  }
+
+  #setShareLink (link) {
+    if (typeof link !== 'string' || !link.trim()) {
+      if (!this.shareLink) {
+        this.shareLink = ''
+      }
+    } else {
+      this.shareLink = link.trim()
+    }
+    this.store.set(this.shareLinkStorageKey, this.shareLink)
   }
 
   #emit () {

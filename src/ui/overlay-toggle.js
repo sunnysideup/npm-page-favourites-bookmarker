@@ -7,6 +7,8 @@ export class OverlayToggle {
    *  templates:{
    *    overlayToggle:Function
    *  },
+   *  htmlClasses Record<string, string>,
+   *  phrases Record<string, string>,
    *  appendTo:HTMLElement,
    * }} opts
    **/
@@ -46,11 +48,11 @@ export class OverlayToggle {
       }
     }
     if(numberOfBookmarks > 0) {
-      this.el.className.remove(this.classNames.noBookmarks)
-      this.el.className.add( this.classNames.hasBookmarks)
+      this.el.className.remove(this.opts.htmlClasses.noBookmarks)
+      this.el.className.add( this.opts.htmlClasses.hasBookmarks)
     } else {
-      this.el.className.add( this.classNames.noBookmarks)
-      this.el.className.remove( this.classNames.hasBookmarks)
+      this.el.className.add( this.opts.htmlClasses.noBookmarks)
+      this.el.className.remove( this.opts.htmlClasses.hasBookmarks)
     }
   }
 }

@@ -1,30 +1,30 @@
 export const defaultTemplates = {
 
-  showOverlayToggle: ({ onClick, classNames, phrases }) => {
+  showOverlayToggle: ({ onClick, htmlClasses, phrases }) => {
     const btn = document.createElement('button')
-    btn.className = classNames.showBookmarks
+    btn.className = htmlClasses.showBookmarks
     btn.setAttribute('aria-label', phrases.showFavouritesListLabel)
     btn.title = phrases.showFavouritesTitle
     btn.textContent = phrases.heartSymbol
     btn.addEventListener('click', e => onClick(e))
 
     const span = document.createElement('span')
-    span.className = classNames.numberOfBookmarks
+    span.className = htmlClasses.numberOfBookmarks
     btn.appendChild(span)
 
     return { btn, span }
   },
 
-  heart: ({ onClick, onShowOverlay, position, classNames, phrases }) => {
+  heart: ({ onClick, onShowOverlay, position, htmlClasses, phrases }) => {
     const wrap = document.createElement('div')
-    wrap.className = classNames.heartWrap
+    wrap.className = htmlClasses.heartWrap
     if (position) {
-      wrap.classList.add(`pf-heart-wrap--${position.leftRight === 'left' ? 'left' : 'right'}`)
-      wrap.classList.add(`pf-heart-wrap--${position.topBottom === 'top' ? 'top' : 'bottom'}`)
+      wrap.classList.add(`${htmlClasses.heartWrap}--${position.leftRight === 'left' ? 'left' : 'right'}`)
+      wrap.classList.add(`${htmlClasses.heartWrap}--${position.topBottom === 'top' ? 'top' : 'bottom'}`)
     }
 
     const showBtn = document.createElement('button')
-    showBtn.className = classNames.showBookmarks
+    showBtn.className = htmlClasses.showBookmarks
     showBtn.title = phrases.showFavouritesTitle
     showBtn.textContent = phrases.menuSymbol
     showBtn.setAttribute('aria-label', phrases.showFavouritesListLabel)
@@ -32,7 +32,7 @@ export const defaultTemplates = {
     wrap.appendChild(showBtn)
 
     const heartBtn = document.createElement('button')
-    heartBtn.className = classNames.heart
+    heartBtn.className = htmlClasses.heart
     heartBtn.textContent = phrases.heartSymbol
     heartBtn.setAttribute('aria-label', phrases.toggleBookmarkLabel)
     heartBtn.addEventListener('click', (e) => onClick(e))
@@ -47,22 +47,22 @@ export const defaultTemplates = {
     isLoggedIn,
     loginUrl,
     shareLink,
-    classNames,
+    htmlClasses,
     phrases
   }) => {
     const bar = document.createElement('div')
-    bar.className = classNames.bar
+    bar.className = htmlClasses.bar
 
     // title
     const title = document.createElement('strong')
-    title.className = classNames.title
+    title.className = htmlClasses.title
     title.textContent = phrases.favouritesTitle
     bar.appendChild(title)
 
     // login call to action
     if (loginUrl && !isLoggedIn()) {
       const login = document.createElement('a')
-      login.className = `${classNames.btn} ${classNames.login}`
+      login.className = `${htmlClasses.btn} ${htmlClasses.login}`
       login.href = loginUrl
       login.textContent = phrases.saveText
       bar.append(login)
@@ -71,7 +71,7 @@ export const defaultTemplates = {
     // share button
     if (shareLink) {
       const share = document.createElement('button')
-      share.className = `${classNames.btn} ${classNames.share}`
+      share.className = `${htmlClasses.btn} ${htmlClasses.share}`
       share.type = 'button'
       share.textContent = phrases.shareText
       share.setAttribute('aria-label', phrases.shareLabel)
@@ -81,7 +81,7 @@ export const defaultTemplates = {
 
     // universal close button
     const close = document.createElement('button')
-    close.className = `${classNames.btn} ${classNames.close}`
+    close.className = `${htmlClasses.btn} ${htmlClasses.close}`
     close.type = 'button'
     close.title = phrases.closeTitle
     close.textContent = phrases.closeSymbol
@@ -92,34 +92,34 @@ export const defaultTemplates = {
     return bar
   },
 
-  overlayShell: ({ classNames, phrases}) => {
+  overlayShell: ({ htmlClasses, phrases}) => {
     const wrap = document.createElement('section')
-    wrap.className = classNames.overlay
+    wrap.className = htmlClasses.overlay
     const list = document.createElement('div')
-    list.className = classNames.list
+    list.className = htmlClasses.list
     wrap.append(list)
     return { wrap, list }
   },
 
-  overlayRow: ({ item, index, onRemove, onReorder, classNames, phrases }) => {
+  overlayRow: ({ item, index, onRemove, onReorder, htmlClasses, phrases }) => {
     const row = document.createElement('div')
-    row.className = classNames.row
+    row.className = htmlClasses.row
     row.draggable = true
 
     const drag = document.createElement('span')
-    drag.className = classNames.sort
+    drag.className = htmlClasses.sort
     drag.title = phrases.dragTitle
     drag.textContent = phrases.dragSymbol
 
     const a = document.createElement('a')
-    a.className = classNames.link
+    a.className = htmlClasses.link
     a.href = item.url
     a.target = '_blank'
     a.rel = 'noopener'
     a.textContent = item.title || item.url
 
     const del = document.createElement('button')
-    del.className = `${classNames.btn} ${classNames.del}`
+    del.className = `${htmlClasses.btn} ${htmlClasses.del}`
     del.type = 'button'
     del.textContent = phrases.heartSymbol
     del.addEventListener('click', () => onRemove(item.url))

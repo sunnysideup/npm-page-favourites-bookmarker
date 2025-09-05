@@ -1,49 +1,30 @@
 export const phrases = {
-  addBookmark: 'Add bookmark',
-  removeBookmark: 'Remove bookmark',
+  addBookmark: 'Add to favourites',
+  removeBookmark: 'Remove from favourites',
+  toggleBookmarkLabel: 'Toggle favourite',
+  heartSymbol: '❤',
   heartOn: '❤',
   heartOff: '❤',  // ♡♡♡♡
+
+  favouritesTitle: 'Favourites',
+
   showFavouritesListLabel: 'Show favourites list',
   showFavouritesTitle: 'Show favourites',
-  toggleBookmarkLabel: 'Toggle bookmark',
-  favouritesTitle: 'Favourites',
+
   saveText: 'save',
+
   shareText: 'share',
   shareLabel: 'Share favourites list by copying link to clipboard',
+
   closeTitle: 'Close',
   closeLabel: 'Close favourites list',
+
   closeSymbol: '×',
-  heartSymbol: '❤',
+
   menuSymbol: '☰',
+
   dragTitle: 'Drag',
   dragSymbol: '⋮'
-  // bookmarks: 'Bookmarks',
-  // noBookmarks: 'No bookmarks yet',
-  // closeOverlay: 'Close overlay',
-  // shareYourBookmarks: 'Share your bookmarks',
-  // syncYourBookmarks: 'Sync your bookmarks',
-  // loginToSyncYourBookmarks: 'Login to sync your bookmarks',
-  // loginToShareYourBookmarks: 'Login to share your bookmarks',
-  // copiedToClipboard: 'Copied to clipboard',
-  // copyToClipboard: 'Copy to clipboard',
-  // copyLinkToClipboard: 'Copy link to clipboard',
-  // deleteAllBookmarks: 'Delete all bookmarks',
-  // confirmDeleteAllBookmarks: 'Are you sure you want to delete all your bookmarks?',
-  // dragToReorder: 'Drag to reorder',
-  // syncError: 'There was an error syncing your bookmarks. Please try again later.',
-  // shareError: 'There was an error sharing your bookmarks. Please try again later.',
-  // loading: 'Loading...',
-  // more: 'More',
-  // less: 'Less',
-  // pageFavourites: 'Page favourites',
-  // heartBtn: 'Bookmark this page',
-  // showBookmarks: 'Show bookmarks',
-  // hideBookmarks: 'Hide bookmarks',
-  // login: 'Login',
-  // logout: 'Logout',
-  // username: 'Username',
-  // password: 'Password',
-  // submit: 'Submit',
-  // invalidCredentials: 'Invalid credentials, please try again.'
+
 }
 

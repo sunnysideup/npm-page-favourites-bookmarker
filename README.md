@@ -51,22 +51,35 @@ Check where `node_modules` lives ...and then add this (with additional path segm
 import { PageFaves } from '@sunnysideup/npm-page-favourites-bookmarker'
 
 const pf = new PageFaves({
-  storage: 'local', // or 'session'
   baseUrl: 'https://api.example.com/my-controller', // enables server I/O
-  endpoints: {
-    events: '/track',
-    bookmarks: '/user/bookmarks'
-  },
-  heartPositionLeftRight: 'right', // 'left' | 'right'
-  heartPositionTopBottom: 'bottom', // 'top' | 'bottom'
-  overlayHotkey: 'KeyB', // press CTRL+SHIFT+B
-  syncOnLoad: true
+
 })
 document.addEventListener('DOMContentLoaded', () => {
   pf.init()
 })
 
 ```
+
+### making the api available in the global space
+
+```js
+import { PageFaves } from '@sunnysideup/npm-page-favourites-bookmarker'
+
+window.myPageFavourites = new PageFaves({
+  baseUrl: 'https://api.example.com/my-controller', // enables server I/O
+
+})
+document.addEventListener('DOMContentLoaded', () => {
+  window.myPageFavourites.init()
+})
+```
+
+### config options
+
+To see the config options (and there are many), you can have a look at this file:
+
+[`index.js`](src/index.js)
+
 
 ### Per-page configuration (page wins)
 

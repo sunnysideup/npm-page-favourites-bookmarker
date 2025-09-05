@@ -21,8 +21,9 @@ export class HeartsOtherPages {
     *    isOn:()=>boolean,
     *    numberOfBookmarks:()=>number
     *  })=>HTMLElement,
-    *  classNames:object,
-    *  phrases:object,
+    *  heartsOtherPagesSelector: null | string,
+    *  htmlClasses Record<string, string>,
+    *  phrases Record<string, string>,
     *  appendTo?:HTMLElement,
    * }} opts
    */
@@ -31,15 +32,18 @@ export class HeartsOtherPages {
     this.hearts = []
   }
 
-  getEls() {
-    return this.hearts.map(heart => heart.getEl()).filter(this.#isHeart) || []
+  getHearts() {
+    return this.hearts.map(heart => heart).filter(this.#isHeart) || []
   }
 
   mount() {
+    this.unmount()
+    const outerSelector = this.opts.heartsOtherPagesSelector || 'body'
+    const outerHeartsContainer = document.querySelector(outerSelector) || document.body
+    if (!outerHeartsContainer) return []
     /** @type {Heart[]} */
-    this.hearts = [...root.querySelectorAll(this.opts.classNames.heartForAnotherPage)]
-      .map(el => this.#createAndMountHeart(el))
-      .filter(this.#isHeart)      // keep only real Heart instances
+    outerHeartsContainer.querySelectorAll('.' + this.opts.htmlClasses.heartForAnotherPage)
+      .forEach(el => this.createAndMountHeart(el))
     return this.hearts
   }
 
@@ -52,7 +56,7 @@ export class HeartsOtherPages {
     this.hearts = []
   }
 
-  #createAndMountHeart = (el) => {
+  createAndMountHeart = (el, forceUpdate = false) => {
     if (!el || el.__pfHeartAttached) return null
     el.__pfHeartAttached = true
 
@@ -67,13 +71,21 @@ export class HeartsOtherPages {
       onShowOverlay: this.opts.onShowOverlay,
       template: args => {
         const node = this.opts.template(args)
-        node.classList.add(this.opts.classNames.heartForAnotherPageInner)
+        node.classList.add(this.opts.htmlClasses.heartForAnotherPageInner)
         return node
       }
     })
     heart.mount()
+    if(forceUpdate) {
+      heart.update()
+    }
+    this.hearts.push(heart)
 
     return heart
+  }
+
+  removeHeart(el) {
+
   }
 
   #isHeart (heart) {

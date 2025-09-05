@@ -4,6 +4,7 @@ import { Net } from './core/net.js'
 import { HeartsOtherPages } from './ui/hearts-other-pages.js'
 import { Heart } from './ui/heart.js'
 import { Overlay } from './ui/overlay.js'
+import { WatchDom } from './core/watch-dom.js'
 import { OverlayToggle } from './ui/overlay-toggle.js'
 
 // functions
@@ -13,40 +14,14 @@ import { deepMerge, toRelativeUrl,toAbsoluteUrl } from './core/utils.js'
 import { defaultTemplates } from './definitions/templates.js'
 import { phrases } from "./lang/phrases.js"
 import { htmlClasses } from "./definitions/html-classes.js"
+
 export class PageFaves {
 
   static DEFAULTS = {
     // templates
     templates: defaultTemplates, // templates
     phrases: phrases, // phrases
-
-    // class names
-    classNames: {
-      heartIsHot: 'pf-heart-is-hot',
-      showBookmarks: 'pf-show-bookmarks',
-      numberOfBookmarks: 'pf-number-of-bookmarks',
-      heartWrap: 'pf-heart-wrap',
-      heart: 'pf-heart',
-      bar: 'pf-bar',
-      title: 'pf-title',
-      btn: 'pf-btn',
-      login: 'pf-login',
-      share: 'pf-share',
-      close: 'pf-close',
-      overlay: 'pf-overlay',
-      list: 'pf-list',
-      row: 'pf-row',
-      sort: 'pf-sort',
-      link: 'pf-link',
-      del: 'pf-del',
-      on: 'pf-on',
-      off: 'pf-off',
-      heartForAnotherPage: 'pf-heart-for-another-page',
-      heartForAnotherPageInner: 'pf-heart-for-another-page-inner',
-      noBookmarks: 'pf-no-bookmarks',
-      hasBookmarks: 'pf-has-bookmarks',
-      heartForCurrentPage: 'pf-heart-for-current-page',
-    },
+    htmlClasses: htmlClasses, // class names
 
     // does it load?
     loadByDefault: true, // load on page?
@@ -61,7 +36,11 @@ export class PageFaves {
     heartPositionLeftRight: 'right', // position of heart icon
     heartPositionTopBottom: 'bottom', // position of heart icon
     heartingHotkey: 'KeyH', // key used to (un)heart the current page
+    // other hearts
+    heartsOtherPagesSelector: 'body', // CSS selector for sections to scan for hearts
+    // all hearts
     heartsLoadingDelay: 1000, // in ms, how long hearts stay 'hot' after being clicked
+
 
     // current page
     currentPageUrl: undefined,
@@ -98,9 +77,9 @@ export class PageFaves {
 
   }
 
-  isInSync = false
-
-  /** @param {object} siteWideOpts */
+  /**
+   * @param {object} siteWideOpts
+   **/
   constructor (siteWideOpts = {}) {
     const pageConfig =
       window.npmPageFavouritesBookmarkerConfig &&
@@ -124,10 +103,14 @@ export class PageFaves {
     if (this.state.mergeFromShareIfAvailable?.()) {
       this.showOverlay()
     }
+    this.#watchDomInit();
   }
 
   #started = false
   #initPromise = null
+  #isInSync = false
+  #hotkeyListeners = null
+  #watchDom = null
 
   init ({
     delayMs = 20,
@@ -181,12 +164,6 @@ export class PageFaves {
     return this.#initPromise
   }
 
-  reinitialize () {
-    this.#started = false
-    this.#createHearts()
-    this.#start()
-  }
-
   updateScreen() {
     this.allHearts.forEach(h => h.update())
     this.overlayToggle?.update()
@@ -196,14 +173,12 @@ export class PageFaves {
     if (this.#started) return
     this.#started = true
 
-    this.allHearts.forEach(h => h.mount())
-
     // sync if needed -
     // @TODO: throttle this! / check if this works
     if (this.opts.syncOnLoad && this.opts.userIsLoggedIn) {
       this.#syncIfStale().catch(e => {
         console.error('Sync failed', e)
-        this.isInSync = false
+        this.#isInSync = false
       })
     }
 
@@ -230,6 +205,8 @@ export class PageFaves {
       window.removeEventListener('keydown', this.#hotkeyListeners)
       this.#hotkeyListeners = null
     }
+    this.#watchDom?.destroy()
+    this.#watchDom = null
 
   }
 
@@ -258,10 +235,13 @@ export class PageFaves {
   }
 
   removeCurrent () {
-    return this.remove(window.location.href)
+    return this.remove(this.opts.currentPageUrl || window.location.href)
   }
 
-  isBookmarked (url = window.location.href) {
+  isBookmarked (url = '') {
+    if(!url) {
+      url = this.opts.currentPageUrl || window.location.href
+    }
     return this.state.has(toRelativeUrl(url))
   }
 
@@ -284,7 +264,6 @@ export class PageFaves {
     } else {
       return this.overlay.show()
     }
-
   }
 
   hideOverlay () {
@@ -298,16 +277,18 @@ export class PageFaves {
 
   add (url, title, imagelink = '', description = '') {
     url = toRelativeUrl(url)
-    const ok = this.state.add(url, title, imagelink, description)
-    if (ok) this.#ping('added', { url, title, imagelink, description })
-    return ok
+    if(!url) return false
+    const isOk = this.state.add(url, title, imagelink, description)
+    if (isOk) this.#ping('added', { url, title, imagelink, description })
+    return isOk
   }
 
   remove (url) {
     url = toRelativeUrl(url)
-    const ok = this.state.remove(url)
-    if (ok) this.#ping('removed', { url })
-    return ok
+    if(!url) return false
+    const isOk = this.state.remove(url)
+    if (isOk) this.#ping('removed', { url })
+    return isOk
   }
 
   clear () {
@@ -317,21 +298,21 @@ export class PageFaves {
   async #ping (type, payload) {
     if (!this.#canServer()) return
     try {
-      const { ok, data } = await this.net.post(this.net.endpoints.events, {
+      const { isOk, data } = await this.net.post(this.net.endpoints.events, {
         code: this.state.code,
         type,
         payload,
         at: Date.now()
       })
 
-      if (ok && data?.status === 'success') {
+      if (isOk && data?.status === 'success') {
         await this.state.setCodeAndShareLink(data)
         const localCount = this.getLocalBookmarkCount()
         if (Number.isFinite(data.numberOfBookmarks) && localCount !== data.numberOfBookmarks) {
-          this.isInSync = false
+          this.#isInSync = false
           await this.syncFromServer()
         } else {
-          this.isInSync = true
+          this.#isInSync = true
         }
       }
     } catch (err) {
@@ -341,11 +322,11 @@ export class PageFaves {
 
   async syncFromServer () {
     if (!this.#canServer()) return
-    const { ok, data } = await this.net.post(this.net.endpoints.bookmarks, {
+    const { isOk, data } = await this.net.post(this.net.endpoints.bookmarks, {
       code: this.state.code,
       bookmarks: this.state.list()
     })
-    if (ok && data?.status === 'success') {
+    if (isOk && data?.status === 'success') {
       await this.state.setCodeAndShareLink(data)
       this.state.mergeFromServer(data)
     }
@@ -380,8 +361,6 @@ export class PageFaves {
     this.overlay.update()
   }
 
-  // Private
-  #hotkeyListeners = null
 
   #bindHotkeys () {
     if(this.#hotkeyListeners === null) {
@@ -423,7 +402,7 @@ export class PageFaves {
   #createHearts() {
     this.#createPageHeart()
     this.#createOtherPageHearts()
-    this.allHearts = [this.heart, ...(this.otherHearts ?? [])].filter(Boolean)
+    this.#mergeAllHearts()
   }
 
 
@@ -432,7 +411,7 @@ export class PageFaves {
       typeof this.opts.loadOnThisPage === 'boolean' ? this.opts.loadOnThisPage : !!this.opts.loadByDefault
     if (this.shouldLoad && !this.heart) {
       this.heart = new Heart({
-        appendTo: document.querySelector(this.opts.classNames.heartForCurrentPage) ?? document.body,
+        appendTo: document.querySelector('.' + this.opts.htmlClasses.heartForCurrentPage) ?? document.body,
         position: {
           leftRight: this.opts.heartPositionLeftRight,
           topBottom: this.opts.heartPositionTopBottom
@@ -442,7 +421,7 @@ export class PageFaves {
         onToggle: () => this.toggleCurrent(),
         onShowOverlay: () => this.showOverlay(),
         template: this.opts.templates.heart,
-        classNames: this.opts.classNames,
+        htmlClasses: this.opts.htmlClasses,
         heartsLoadingDelay: this.opts.heartsLoadingDelay
       })
       this.heart.mount()
@@ -454,18 +433,21 @@ export class PageFaves {
 
   #createOtherPageHearts() {
 
-    const heartsOtherPages = HeartsOtherPages(
+    this.otherHearts = HeartsOtherPages(
       {
         isBookmarked: (url) => this.isBookmarked(url),
         numberOfBookmarks: () => this.state.list().length,
         onToggle: (ctx) => this.toggleFromElement(ctx?.el ?? null),
         onShowOverlay: () => this.showOverlay(),
         template: this.opts.templates.heart,
-        classNames: this.opts.classNames,
+        htmlClasses: this.opts.htmlClasses,
       }
     )
-    heartsOtherPages.mount()
-    this.otherHearts = heartsOtherPages.getEls()
+    this.otherHearts.mount()
+  }
+
+  #mergeAllHearts() {
+    this.allHearts =  [this.heart, ...(this.otherHearts?.getHearts() || [])].filter(Boolean)
   }
 
   #createOverlay() {
@@ -494,7 +476,7 @@ export class PageFaves {
         overlayShell: this.opts.templates.overlayShell,
         overlayRow: this.opts.templates.overlayRow
       },
-      classNames: this.opts.classNames,
+      htmlClasses: this.opts.htmlClasses,
     })
   }
 
@@ -520,22 +502,31 @@ export class PageFaves {
   }
 
   async #syncIfStale () {
-    if (this.isInSync === true) return
+    if (this.#isInSync === true) return
     await this.syncFromServer()
   }
 
-  #queue = []
+  #watchDomInit() {
+    if (this.#watchDom) return
+    if (!this.otherHearts) return
 
-  #pingScheduled = false
+    const selector = this.opts.heartsOtherPagesSelector || 'body'
+    const root = document.querySelector(selector) || document.body
+    if (!root) return
 
-  #schedulePing (type, payload) {
-    this.#queue.push({type, payload})
-    if (this.#pingScheduled) return
-    this.#pingScheduled = true
-    setTimeout(async () => {
-      const batch = this.#queue.splice(0)
-      this.#pingScheduled = false
-      await this.#ping('batch', batch)
-    }, 150)
+    this.#watchDom = new WatchDom({
+      root,
+      className: this.opts.htmlClasses.heartForAnotherPage,
+      onAdd: el => {
+        this.otherHearts.createAndMountHeart(el)
+        this.#mergeAllHearts()
+      },
+      onRemove: el => {
+        this.otherHearts.removeHeart(el)
+        this.#mergeAllHearts()
+      },
+      observeToggles: false
+    }).start()
   }
+
 }

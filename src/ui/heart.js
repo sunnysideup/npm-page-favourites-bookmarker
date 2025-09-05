@@ -12,8 +12,8 @@ export class Heart {
    *  heartsLoadingDelay?:number,
    *  appendTo?:HTMLElement,
    *  template:(args:{})=>HTMLElement
-   *  classNames:object,
-   *  phrases:object,
+   *  htmlClasses Record<string, string>,
+   *  phrases Record<string, string>,
    * }} opts
    */
   constructor (opts) {
@@ -34,16 +34,16 @@ export class Heart {
         const has = this.opts.numberOfBookmarks > 0
         this.update()
         if (has) {
-          this.myHeart.classList.add(this.opts.classNames.heartIsHot)
+          this.myHeart.classList.add(this.opts.htmlClasses.heartIsHot)
           const delay = this.opts.heartsLoadingDelay ? this.opts.heartsLoadingDelay : 1000
-          setTimeout(() => this.myHeart?.classList.remove(this.opts.classNames.heartIsHot), delay)
+          setTimeout(() => this.myHeart?.classList.remove(this.opts.htmlClasses.heartIsHot), delay)
         }
       },
       onShowOverlay: this.opts.onShowOverlay,
       position: this.opts.position,
       isOn: this.opts.isOn,
       numberOfBookmarks: this.opts.numberOfBookmarks,
-      classNames: this.opts.classNames,
+      htmlClasses: this.opts.htmlClasses,
       phrases: this.opts.phrases
     })
     this.myHeart = wrap
@@ -59,7 +59,7 @@ export class Heart {
 
     if (this.heartBtn) {
       const on = this.opts.isOn()
-      this.heartBtn.classList.toggle(this.opts.classNames.on, on)
+      this.heartBtn.classList.toggle(this.opts.htmlClasses.on, on)
       this.heartBtn.textContent = on ? this.opts.phrases.heartOn : this.opts.phrases.heartOff
       this.heartBtn.title = on ? this.opts.phrases.removeBookmark : this.opts.phrases.addBookmark
     }

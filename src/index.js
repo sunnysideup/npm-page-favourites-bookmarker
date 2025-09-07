@@ -157,7 +157,6 @@ export class PageFaves {
   }
 
   toggleFromData (payload) {
-    // console.log('toggleFromData', payload)
     const {url, title, imagelink, description} = payload || {}
 
     if (!url) return false
@@ -294,6 +293,9 @@ export class PageFaves {
         } else {
           this.#isInSync = true
         }
+      } else {
+        console.error('Ping not ok', type, payload, data)
+        this.#isInSync = false
       }
     } catch (err) {
       console.error('Ping failed', err)

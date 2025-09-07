@@ -61,16 +61,16 @@ export class Net {
           try { data = await res.text() } catch { data = '' }
         }
       }
-
+      const isOk = (res.status >= 200 && res.status < 300  ) ? true : false
       return {
-        ok: res.ok,
+        isOk: isOk,
         status: res.status,
         headers: res.headers,
         data,
-        error: res.ok ? undefined : (data && typeof data === 'object' && 'message' in data ? data.message : res.statusText)
+        error: isOk ? undefined : (data && typeof data === 'object' && 'message' in data ? data.message : res.statusText)
       }
     } catch (err) {
-      return { ok: false, status: 0, headers: undefined, data: null, error: err?.message || 'Network error' }
+      return { isOk: false, status: 0, headers: undefined, data: null, error: err?.message || 'Network error' }
     } finally {
       if (timer) clearTimeout(timer)
     }

@@ -126,6 +126,9 @@ export class PageFaves {
   updateScreen () {
     this.allHearts.forEach(h => h.update())
     this.overlayToggle?.update()
+    if(this.overlay.isShown()) {
+      this.overlay.update()
+    }
   }
 
   addCurrent () {

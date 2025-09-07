@@ -121,7 +121,7 @@ export const defaultTemplates = Object.freeze({
     del.className = `${htmlClasses.btn} ${htmlClasses.del}`
     del.type = 'button'
     del.textContent = phrases.heartSymbol
-    del.addEventListener('click', (e) => onRemove(e, item.url))
+    del.addEventListener('click', (e) => onRemove(e, item.url, index))
 
     let img
     if (item.imagelink) {

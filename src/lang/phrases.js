@@ -15,6 +15,7 @@ export const phrases = Object.freeze({
 
   shareText: 'share',
   shareLabel: 'Share favourites list by copying link to clipboard',
+  copiedText: '✓ copied',
 
   closeTitle: 'Close',
   closeLabel: 'Close favourites list',

@@ -6,12 +6,11 @@ export const defaultTemplates = Object.freeze({
     btn.setAttribute('aria-label', phrases.showFavouritesListLabel)
     btn.title = phrases.showFavouritesTitle
     btn.textContent = phrases.heartSymbol
-    btn.addEventListener('click', e => onClick(e))
+    btn.addEventListener('click', onClick)
 
     const span = document.createElement('span')
     span.className = htmlClasses.numberOfBookmarks
     btn.appendChild(span)
-
     return { btn, span }
   },
 
@@ -28,14 +27,14 @@ export const defaultTemplates = Object.freeze({
     showBtn.title = phrases.showFavouritesTitle
     showBtn.textContent = phrases.menuSymbol
     showBtn.setAttribute('aria-label', phrases.showFavouritesListLabel)
-    showBtn.addEventListener('click', (e) => onShowOverlay(e))
+    showBtn.addEventListener('click', onShowOverlay)
     wrap.appendChild(showBtn)
 
     const heartBtn = document.createElement('button')
     heartBtn.className = htmlClasses.heart
     heartBtn.textContent = phrases.heartSymbol
     heartBtn.setAttribute('aria-label', phrases.toggleBookmarkLabel)
-    heartBtn.addEventListener('click', (e) => onClick(e))
+    heartBtn.addEventListener('click', onClick)
     wrap.appendChild(heartBtn)
 
     return { wrap, heartBtn, showBtn }
@@ -75,7 +74,7 @@ export const defaultTemplates = Object.freeze({
       share.type = 'button'
       share.textContent = phrases.shareText
       share.setAttribute('aria-label', phrases.shareLabel)
-      share.addEventListener('click', (e) => onShare(e))
+      share.addEventListener('click', (e) => onShare(e, share))
       bar.append(share)
     }
 
@@ -86,7 +85,7 @@ export const defaultTemplates = Object.freeze({
     close.title = phrases.closeTitle
     close.textContent = phrases.closeSymbol
     close.setAttribute('aria-label', phrases.closeLabel)
-    close.addEventListener('click', (e) => onClose(e))
+    close.addEventListener('click', onClose)
     bar.appendChild(close)
 
     return bar
@@ -122,7 +121,7 @@ export const defaultTemplates = Object.freeze({
     del.className = `${htmlClasses.btn} ${htmlClasses.del}`
     del.type = 'button'
     del.textContent = phrases.heartSymbol
-    del.addEventListener('click', () => onRemove(item.url))
+    del.addEventListener('click', (e) => onRemove(e, item.url))
 
     let img
     if (item.imagelink) {

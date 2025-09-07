@@ -78,3 +78,12 @@ export const stripToText = (str = '') => {
   tmp.innerHTML = cleaned
   return tmp.value // decoded text
 }
+
+
+export const noBubbleFn = (fn) => function (...args) {
+  const e = args[0]
+  e?.preventDefault?.()
+  e?.stopPropagation?.()
+  e?.stopImmediatePropagation?.()
+  return fn?.apply(this, args.slice(1)) // ← pass everything *after* the event
+}

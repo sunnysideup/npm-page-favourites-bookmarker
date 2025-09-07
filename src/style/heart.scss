@@ -132,3 +132,14 @@
     box-shadow: none;
   }
 }
+
+.pf-no-bookmarks {
+  opacity: 0.5 !important;
+}
+
+.pf-has-bookmarks {
+  opacity: 0.8 !important;
+  &:hover {
+    opacity: 1 !important;
+  }
+}

@@ -69,9 +69,9 @@ export class Overlay {
       }
     )
     const bar = this.opts.templates.overlayBar({
-      onClose: (event) => this.opts.onClose(event),
-      onSync: (event) => this.opts.onSync(event),
-      onShare: (event) => this.opts.onShare(event),
+      onClose: this.opts.onClose,
+      onSync: this.opts.onSync,
+      onShare: this.opts.onShare,
       userIsLoggedIn: this.opts.userIsLoggedIn,
       loginUrl: this.opts.loginUrl,
       shareLink: this.opts.shareLink,
@@ -105,8 +105,8 @@ export class Overlay {
       const row = this.opts.templates.overlayRow({
         item,
         index: i,
-        onRemove: url => this.opts.onRemove(url),
-        onReorder: (from, to) => this.opts.onReorder(from, to),
+        onRemove: this.opts.onRemove,
+        onReorder: this.opts.onReorder,
         htmlClasses: this.opts.htmlClasses,
         phrases: this.opts.phrases
       })

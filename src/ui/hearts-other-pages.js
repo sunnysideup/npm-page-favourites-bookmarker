@@ -52,12 +52,15 @@ export class HeartsOtherPages {
     el.__pfHeartAttached = true
 
     const { pfUrl: url, pfTitle: title, pfDescription: description, pfImagelink: imagelink } = el.dataset
+    const payload = { url, title, description, imagelink, el }
 
     const heart = new Heart({
-      onClick: () => this.opts.onToggle({ url, title, description, imagelink, el }),
-      onShowOverlay: this.opts.onShowOverlay,
+      onClick: (e) => this.opts.onClick(e, payload),
+      onShowOverlay: (e) => this.opts.onShowOverlay(e),
       numberOfBookmarks: () => Number(this.opts.numberOfBookmarks?.() ?? 0),
+      isOn: () => Boolean(this.opts.isOn?.(url)),
       appendTo: el,
+      position: null,
       heartsLoadingDelay: this.opts.heartsLoadingDelay,
       templates: {
         heart: args => {

@@ -8,7 +8,7 @@ import { WatchDom } from './core/watch-dom.js'
 import { OverlayToggle } from './ui/overlay-toggle.js'
 
 // functions
-import { deepMerge, toRelativeUrl, toAbsoluteUrl } from './core/utils.js'
+import { deepMerge, toRelativeUrl, toAbsoluteUrl, noBubbleFn } from './core/utils.js'
 
 // objects
 import { defaultTemplates } from './definitions/templates.js'
@@ -36,7 +36,7 @@ export class PageFaves {
     heartPositionTopBottom: 'bottom', // position of heart icon
     heartingHotkey: 'KeyH', // key used to (un)heart the current page
     // other hearts
-    heartsOtherPagesSelector: '', // CSS selector for sections to scan for hearts
+    heartsOtherPagesSelector: '', // CSS selector for sections to scan for hearts being added / removed to dom
     // all hearts
     heartsLoadingDelay: 1000, // in ms, how long hearts stay 'hot' after being clicked
 
@@ -84,6 +84,20 @@ export class PageFaves {
     // precedence: defaults < siteWideOpts < pageConfig
     this.opts = deepMerge(PageFaves.DEFAULTS, siteWideOpts, pageConfig)
 
+  }
+
+  #started = false
+  #initPromise = null
+  #isInSync = false
+  #hotkeyListeners = null
+  #watchDom = null
+
+  init ({
+    delayMs = 20,
+  } = {}) {
+
+    if (this.#started) return
+    this.#started = true
     this.#setupState()
     this.#setupNet()
 
@@ -95,74 +109,6 @@ export class PageFaves {
       this.showOverlay()
     }
     this.#watchDomInit()
-  }
-
-  #started = false
-  #initPromise = null
-  #isInSync = false
-  #hotkeyListeners = null
-  #watchDom = null
-
-  init ({
-    delayMs = 20,
-    waitForLoad = true,
-    interactionEvents = [
-      'scroll',
-      'pointerdown',
-      'click',
-      'keydown',
-      'wheel',
-      'touchstart',
-      'mousemove'
-    ]
-  } = {}) {
-    if (this.#initPromise) return this.#initPromise
-
-    this.#initPromise = new Promise(resolve => {
-      const schedule = () => {
-        if (this.#started) {
-          resolve()
-          return
-        }
-
-        const controller = new AbortController()
-        const { signal } = controller
-        const start = async () => {
-          if (this.#started) return
-          controller.abort()
-          clearTimeout(timer)
-          await this.#start()
-          resolve()
-        }
-
-        const timer = setTimeout(start, delayMs)
-        const fire = () => {
-          clearTimeout(timer)
-          start()
-        }
-        interactionEvents.forEach(evt =>
-          document.addEventListener(evt, fire, { once: true, passive: true, signal })
-        )
-      }
-
-      if (waitForLoad && document.readyState !== 'complete') {
-        document.addEventListener('load', schedule, { once: true })
-      } else {
-        schedule()
-      }
-    })
-
-    return this.#initPromise
-  }
-
-  updateScreen () {
-    this.allHearts.forEach(h => h.update())
-    this.overlayToggle?.update()
-  }
-
-  async #start () {
-    if (this.#started) return
-    this.#started = true
 
     // sync if needed -
     // @TODO: throttle this! / check if this works
@@ -172,10 +118,14 @@ export class PageFaves {
         this.#isInSync = false
       })
     }
-
     this.updateScreen()
 
     this.#bindHotkeys()
+  }
+
+  updateScreen () {
+    this.allHearts.forEach(h => h.update())
+    this.overlayToggle?.update()
   }
 
   addCurrent () {
@@ -203,16 +153,15 @@ export class PageFaves {
     return this.state.has(toRelativeUrl(url))
   }
 
-  toggleFromElement (el) {
-    const url = el?.dataset?.pfUrl || el?.href || ''
+  toggleFromData (payload) {
+    // console.log('toggleFromData', payload)
+    const {url, title, imagelink, description} = payload || {}
 
     if (!url) return false
     if (this.isBookmarked(url)) {
       return this.remove(url)
     }
-    const title = el.dataset.pfTitle || el.innerText || el.textContent || url
-    const imagelink = el.dataset.pfImagelink || ''
-    const description = el.dataset.pfDescription || ''
+
     return this.add(url, title, imagelink, description)
   }
 
@@ -270,9 +219,7 @@ export class PageFaves {
     }
   }
 
-  async copyShareLink (event) {
-    event.preventDefault()
-    const el = event.target
+  async copyShareLink (el) {
     let link = this.state.getShareLink()
     if (!link) return false
     link = toAbsoluteUrl(link)
@@ -287,7 +234,12 @@ export class PageFaves {
         document.execCommand('copy')
         textarea.remove()
       }
-      el.innerText = '✓ copied'
+      if(el) {
+        el.innerText = this.opts.phrases.copiedText
+        setTimeout(() => {
+          el.innerText = this.opts.phrases.shareText
+        }, 2000)
+      }
       return true
     } catch {
       return false
@@ -396,9 +348,10 @@ export class PageFaves {
       typeof this.opts.loadOnThisPage === 'boolean' ? this.opts.loadOnThisPage : !!this.opts.loadByDefault
     if (this.shouldLoad && !this.heart) {
       this.heart = new Heart({
+        onClick: noBubbleFn(() => this.toggleCurrent()),
+        onShowOverlay: noBubbleFn(() => this.toggleOverlay()),
         numberOfBookmarks: () => this.state.list().length,
-        onClick: () => this.toggleCurrent(),
-        onShowOverlay: () => this.showOverlay(),
+        isOn: () => this.isBookmarked(),
         appendTo: document.querySelector('.' + this.opts.htmlClasses.heartForCurrentPage) ?? document.body,
         position: {
           leftRight: this.opts.heartPositionLeftRight,
@@ -420,9 +373,10 @@ export class PageFaves {
   #createOtherPageHearts () {
     this.otherHearts = new HeartsOtherPages(
       {
-        onClick: (ctx) => this.toggleFromElement(ctx?.el ?? null),
-        onShowOverlay: () => this.showOverlay(),
+        onClick: noBubbleFn((payload) => this.toggleFromData(payload)),
+        onShowOverlay: noBubbleFn(() => this.toggleOverlay()),
         numberOfBookmarks: () => this.state.list().length,
+        isOn: (url) => this.isBookmarked(url),
         // no appendTo - hearts are appended to their own elements
         // no position - hearts are positioned via CSS
         heartsLoadingDelay: this.opts.heartsLoadingDelay,
@@ -443,20 +397,20 @@ export class PageFaves {
   #createOverlay () {
     this.overlay = new Overlay({
       getList: () => this.state.list(),
-      onRemove: url => {
+      onRemove: noBubbleFn((url) => {
         this.remove(url)
         this.overlay.update()
         this.updateScreen()
-      },
+      }),
       // CHANGED: ping on reorder too
       onReorder: (from, to) => {
         this.state.reorder(from, to)
         this.#ping('reordered', { from, to })
         this.overlay.update()
       },
-      onClose: (event) => this.hideOverlay(event),
-      onSync: (event) => this.syncFromServer(event),
-      onShare: (event) => this.copyShareLink(event),
+      onClose: noBubbleFn(() => this.hideOverlay()),
+      onSync: noBubbleFn(() => this.syncFromServer()),
+      onShare: noBubbleFn((el) => this.copyShareLink(el)),
       // NEW: pass login awareness to overlay (for CTA)
       shareLink: () => this.state.getShareLink(),
       userIsLoggedIn: !!this.opts.userIsLoggedIn,
@@ -473,7 +427,7 @@ export class PageFaves {
 
   #createOverlayToggle () {
     this.overlayToggle = new OverlayToggle({
-      onClick: (e) => { e.preventDefault(); e.stopPropagation(); this.showOverlay() },
+      onClick: noBubbleFn(() => { this.toggleOverlay(); }),
       numberOfBookmarks: () => this.state.list().length,
       appendTo: document.querySelector('.' + this.opts.htmlClasses.overlayToggleContainer),
       templates: {

@@ -3,6 +3,7 @@ export class Heart {
    * @param {{
    *  onClick:()=>void,
    *  onShowOverlay:()=>void,
+   *  isOn:()=>boolean,
    *  appendTo?:HTMLElement,
    *  position:{
    *    leftRight:'left'|'right',
@@ -28,21 +29,9 @@ export class Heart {
   mount () {
     if (this.myHeart) return
     const { wrap, heartBtn, showBtn } = this.opts.templates.heart({
-      onClick: e => {
-        this.opts.onClick()
-        // show helper for ~1s
-        this.update()
-        const has = this.opts.numberOfBookmarks() > 0
-        if (has) {
-          this.myHeart.classList.add(this.opts.htmlClasses.heartIsHot)
-          const delay = this.opts.heartsLoadingDelay ? this.opts.heartsLoadingDelay : 1000
-          setTimeout(() => this.myHeart?.classList.remove(this.opts.htmlClasses.heartIsHot), delay)
-        }
-      },
+      onClick: this.opts.onClick,
       onShowOverlay: this.opts.onShowOverlay,
       position: this.opts.position,
-      isOn: this.opts.isOn,
-      numberOfBookmarks: this.opts.numberOfBookmarks,
       htmlClasses: this.opts.htmlClasses,
       phrases: this.opts.phrases
     })
@@ -55,11 +44,22 @@ export class Heart {
     return this
   }
 
+  handleHeartClick(e) {
+    this.update()
+
+    if (this.opts.numberOfBookmarks() > 0) {
+      this.myHeart.classList.add(this.opts.htmlClasses.heartIsHot)
+      const delay = this.opts.heartsLoadingDelay || 1000
+      setTimeout(() => this.myHeart?.classList.remove(this.opts.htmlClasses.heartIsHot), delay)
+    }
+  }
+
   update () {
     if (!this.myHeart) return
 
     if (this.heartBtn) {
       const on = this.opts.isOn()
+
       this.heartBtn.classList.toggle(this.opts.htmlClasses.on, on)
       this.heartBtn.textContent = on ? this.opts.phrases.heartOn : this.opts.phrases.heartOff
       this.heartBtn.title = on ? this.opts.phrases.removeBookmark : this.opts.phrases.addBookmark

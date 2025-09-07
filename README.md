@@ -159,7 +159,7 @@ Every add/remove/reorder triggers a POST {events}.
 - `removeCurrent` → remove bookmark for the current page.
 - `toggleCurrent` → toggle bookmark for the current page.
 - `isBookmarked(url)` → check if URL is bookmarked
-- `toggleFromElement(el)` → add a bookmark for another page (see above for structure of el)
+- `toggleFromData(el)` → add a bookmark for another page (see above for structure of el)
 - `add(url, title, imagelink, description)` → add a bookmark
 - `remove(url)` → remove bookmark
 

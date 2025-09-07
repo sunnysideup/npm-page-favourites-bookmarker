@@ -25,13 +25,14 @@ export class OverlayToggle {
 
   mount () {
     if (this.opts.appendTo) {
-      const { outer, inner } = this.opts.templates.showOverlayToggle({
-        onClick: (e) => this.opts.onClick(e),
+      const { btn, span } = this.opts.templates.showOverlayToggle({
+        onClick: this.opts.onClick,
         htmlClasses: this.opts.htmlClasses,
         phrases: this.opts.phrases
       })
-      this.opts.appendTo.appendChild(outer)
-      this.innerSpan = inner
+      this.el = btn
+      this.opts.appendTo.appendChild(btn)
+      this.innerSpan = span
     }
   }
 
@@ -41,11 +42,11 @@ export class OverlayToggle {
     }
     const numberOfBookmarks = this.opts.numberOfBookmarks()
     if (numberOfBookmarks > 0) {
-      this.el.className.remove(this.opts.htmlClasses.noBookmarks)
-      this.el.className.add(this.opts.htmlClasses.hasBookmarks)
+      this.el.classList.remove(this.opts.htmlClasses.noBookmarks)
+      this.el.classList.add(this.opts.htmlClasses.hasBookmarks)
     } else {
-      this.el.className.add(this.opts.htmlClasses.noBookmarks)
-      this.el.className.remove(this.opts.htmlClasses.hasBookmarks)
+      this.el.classList.add(this.opts.htmlClasses.noBookmarks)
+      this.el.classList.remove(this.opts.htmlClasses.hasBookmarks)
     }
     if (this.innerSpan) {
       if (numberOfBookmarks > 0) {

@@ -141,7 +141,7 @@ where ... is a different value for each page (description and imagelink are opti
 
 No network calls are made unless `baseUrl` is provided.
 
-On `init()`, if `syncOnLoad` is true and `userIsLoggedIn` is true, the client pulls favourites from {bookmarks} and **replaces** them with local.
+On `init()`, if `syncLoggedInUsersToServer` is true and `userIsLoggedIn` is true, the client pulls favourites from {bookmarks} and **replaces** them with local.
 
 This initial pull is run whenever the number of favourites on the server is not the same as the local ones. 
 

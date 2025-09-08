@@ -28,8 +28,8 @@ export class PageFaves {
 
     // syncs and merge:
 
-    syncOnLoad: false, // do we sync with server at all?
-    mergeOnLoad: undefined,
+    syncLoggedInUsersToServer: true, // do we sync with server at all?
+    mergeOnLoad: false,
 
     // heart this page
     heartPositionLeftRight: 'right', // position of heart icon
@@ -91,10 +91,10 @@ export class PageFaves {
   #hotkeyListeners = null
   #watchDom = null
 
-  init ({
-    delayMs = 20,
-  } = {}) {
-    window.setTimeout(() => this.mount(), delayMs)
+  init ({} = {}) {
+    requestAnimationFrame(() => {
+      this.mount()
+    })
   }
 
   mount(){
@@ -115,11 +115,14 @@ export class PageFaves {
 
     // sync if needed -
     // @TODO: throttle this! / check if this works
-    if (this.opts.syncOnLoad && this.opts.userIsLoggedIn) {
+    console.log('sync on load?', this.opts.syncLoggedInUsersToServer, 'user logged in?', this.opts.userIsLoggedIn)
+    if (this.opts.syncLoggedInUsersToServer && this.opts.userIsLoggedIn) {
       this.syncFromServer(true, true).catch(e => {
         console.error('Sync failed', e)
         this.#isInSync = false
       })
+    } else if (this.opts.mergeOnLoad) {
+      this.state.syncFromServer(false, false)
     }
     this.updateScreen()
 
@@ -215,9 +218,11 @@ export class PageFaves {
 
   async syncFromServer (force = false, fullServerReplace = false) {
     if (!this.#canServer()) return
+    if(force !== true && this.#isInSync === true) return
+    const bookmarks = fullServerReplace ? [] : this.state.list()
     const { isOk, data } = await this.net.post(this.net.endpoints.bookmarks, {
       code: this.state.code,
-      bookmarks: this.state.list()
+      bookmarks: bookmarks
     })
     if (isOk && data?.status === 'success') {
       await this.state.setCodeAndShareLink(data)
@@ -276,6 +281,20 @@ export class PageFaves {
     }
     this.#watchDom?.destroy()
     this.#watchDom = null
+  }
+
+  getEmailLink() {
+    const shareLinkURL = this.getShareLinkAbsolute()
+    const u = new URL('mailto:')
+    u.searchParams.set('subject', this.opts.phrases.favouritesTitle + ': ' + shareLinkURL)
+    u.searchParams.set('body', shareLinkURL)
+    return u.href
+  }
+
+  getShareLinkAbsolute() {
+    const shareLink = this.state.getShareLink()
+    if (!shareLink) return ''
+    return new URL(shareLink, location.origin).href
   }
 
   async #ping (type, payload) {
@@ -421,13 +440,15 @@ export class PageFaves {
       onSync: noBubbleFn(() => this.syncFromServer(true, true)),
       onShare: noBubbleFn((el) => this.copyShareLink(el)),
       // NEW: pass login awareness to overlay (for CTA)
-      shareLink: () => this.state.getShareLink(),
+      shareLink: this.state.getShareLink(),
+      emailLink: this.getEmailLink(),
       userIsLoggedIn: !!this.opts.userIsLoggedIn,
       loginUrl: this.opts.loginUrl,
       templates: {
         overlayBar: this.opts.templates.overlayBar,
         overlayShell: this.opts.templates.overlayShell,
-        overlayRow: this.opts.templates.overlayRow
+        overlayRow: this.opts.templates.overlayRow,
+        overlayNoBookmarks: this.opts.templates.overlayNoBookmarks
       },
       htmlClasses: this.opts.htmlClasses,
       phrases: this.opts.phrases

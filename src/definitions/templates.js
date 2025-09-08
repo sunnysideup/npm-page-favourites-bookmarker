@@ -3,7 +3,7 @@ export const defaultTemplates = Object.freeze({
   showOverlayToggle: ({ onClick, htmlClasses, phrases }) => {
     const btn = document.createElement('button')
     btn.className = htmlClasses.showBookmarks
-    btn.setAttribute('aria-label', phrases.showFavouritesListLabel)
+    btn.setAttribute('aria-label', phrases.showFavouritesListExplanation)
     btn.title = phrases.showFavouritesTitle
     btn.textContent = phrases.heartSymbol
     btn.addEventListener('click', onClick)
@@ -26,7 +26,7 @@ export const defaultTemplates = Object.freeze({
     showBtn.className = htmlClasses.showBookmarks
     showBtn.title = phrases.showFavouritesTitle
     showBtn.textContent = phrases.menuSymbol
-    showBtn.setAttribute('aria-label', phrases.showFavouritesListLabel)
+    showBtn.setAttribute('aria-label', phrases.showFavouritesListExplanation)
     showBtn.addEventListener('click', onShowOverlay)
     wrap.appendChild(showBtn)
 
@@ -43,9 +43,11 @@ export const defaultTemplates = Object.freeze({
   overlayBar: ({
     onClose,
     onShare,
+    hasBookmarks,
     userIsLoggedIn,
     loginUrl,
     shareLink,
+    emailLink,
     htmlClasses,
     phrases
   }) => {
@@ -59,23 +61,38 @@ export const defaultTemplates = Object.freeze({
     bar.appendChild(title)
 
     // login call to action
-    if (loginUrl && !userIsLoggedIn) {
-      const login = document.createElement('a')
-      login.className = `${htmlClasses.btn} ${htmlClasses.login}`
-      login.href = loginUrl
-      login.textContent = phrases.saveText
-      bar.append(login)
-    }
+    if(hasBookmarks) {
+      if (loginUrl && !userIsLoggedIn) {
+        const login = document.createElement('a')
+        login.className = `${htmlClasses.btn} ${htmlClasses.login}`
+        login.href = loginUrl
+        login.textContent = phrases.saveText
+        login.title = phrases.saveExplanation
+        login.setAttribute('aria-label', phrases.saveExplanation)
+        bar.append(login)
+      }
 
-    // share button
-    if (shareLink) {
-      const share = document.createElement('button')
-      share.className = `${htmlClasses.btn} ${htmlClasses.share}`
-      share.type = 'button'
-      share.textContent = phrases.shareText
-      share.setAttribute('aria-label', phrases.shareLabel)
-      share.addEventListener('click', (e) => onShare(e, share))
-      bar.append(share)
+      // share button
+      if (shareLink) {
+        const share = document.createElement('button')
+        share.className = `${htmlClasses.btn} ${htmlClasses.share}`
+        share.type = 'button'
+        share.textContent = phrases.shareText
+        share.title = phrases.shareExplanation
+        share.setAttribute('aria-label', phrases.shareExplanation)
+        share.addEventListener('click', (e) => onShare(e, share))
+        bar.append(share)
+      }
+      if (emailLink) {
+
+        const emailBtn = document.createElement('a')
+        emailBtn.className = `${htmlClasses.btn} ${htmlClasses.email}`
+        emailBtn.href = emailLink
+        emailBtn.textContent = phrases.emailLinkText
+        emailBtn.title = phrases.emailLinkExplanation
+        emailBtn.setAttribute('aria-label', phrases.emailLinkExplanation)
+        bar.append(emailBtn)
+      }
     }
 
     // universal close button
@@ -84,7 +101,7 @@ export const defaultTemplates = Object.freeze({
     close.type = 'button'
     close.title = phrases.closeTitle
     close.textContent = phrases.closeSymbol
-    close.setAttribute('aria-label', phrases.closeLabel)
+    close.setAttribute('aria-label', phrases.closeExplanation)
     close.addEventListener('click', onClose)
     bar.appendChild(close)
 
@@ -98,6 +115,13 @@ export const defaultTemplates = Object.freeze({
     list.className = htmlClasses.list
     wrap.append(list)
     return { wrap, list }
+  },
+
+  overlayNoBookmarks: ({ htmlClasses, phrases }) => {
+    const noBookmarks = document.createElement('div')
+    noBookmarks.className = htmlClasses.noBookmarksList
+    noBookmarks.textContent = phrases.noBookmarksText || 'No bookmarks yet'
+    return noBookmarks
   },
 
   overlayRow: ({ item, index, onRemove, onReorder, htmlClasses, phrases }) => {

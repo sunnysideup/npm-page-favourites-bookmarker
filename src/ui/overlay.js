@@ -8,12 +8,14 @@ export class Overlay {
    *   onSync:()=>Promise<void>,
    *   onShare:()=>Promise<void>,
    *   shareLink?: string,
+   *   emailLink?: string,
    *   userIsLoggedIn: boolean,
    *   loginUrl?: string,
    *   templates:{
    *     overlayBar:Function,
    *     overlayShell:Function,
    *     overlayRow:Function
+   *     overlayNoBookmarks:Function
    *   }
    *   htmlClasses Record<string, string>,
    *   phrases Record<string, string>,
@@ -68,13 +70,16 @@ export class Overlay {
         phrases: this.opts.phrases
       }
     )
+    const hasBookmarks = this.opts.getList().length > 0
     const bar = this.opts.templates.overlayBar({
       onClose: this.opts.onClose,
       onSync: this.opts.onSync,
       onShare: this.opts.onShare,
+      hasBookmarks,
       userIsLoggedIn: this.opts.userIsLoggedIn,
       loginUrl: this.opts.loginUrl,
       shareLink: this.opts.shareLink,
+      emailLink: this.opts.emailLink,
       htmlClasses: this.opts.htmlClasses,
       phrases: this.opts.phrases
     })
@@ -101,17 +106,26 @@ export class Overlay {
     if (!this.listEl) return
     this.listEl.innerHTML = ''
     const frag = document.createDocumentFragment()
-    this.opts.getList().forEach((item, i) => {
-      const row = this.opts.templates.overlayRow({
-        item,
-        index: i,
-        onRemove: this.opts.onRemove,
-        onReorder: this.opts.onReorder,
+    const rowList = this.opts.getList()
+    if (rowList.length === 0) {
+      const row = this.opts.templates.overlayNoBookmarks({
         htmlClasses: this.opts.htmlClasses,
         phrases: this.opts.phrases
       })
       frag.appendChild(row)
-    })
+    } else {
+      rowList.forEach((item, i) => {
+        const row = this.opts.templates.overlayRow({
+          item,
+          index: i,
+          onRemove: this.opts.onRemove,
+          onReorder: this.opts.onReorder,
+          htmlClasses: this.opts.htmlClasses,
+          phrases: this.opts.phrases
+        })
+        frag.appendChild(row)
+      })
+    }
     this.listEl.appendChild(frag)
   }
 

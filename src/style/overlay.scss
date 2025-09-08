@@ -24,7 +24,8 @@
       flex: 1;
     }
     .pf-share,
-    .pf-login {
+    .pf-login,
+    .pf-email {
       padding: 0px 16px;
       text-decoration: none;
       &:hover {
@@ -40,9 +41,7 @@
         color: #fff;
       }
     }
-    .pf-share,
-    .pf-login,
-    .pf-close {
+    .pf-btn {
       border: 1px solid #ccc;
       font-size: 15px !important;
     }

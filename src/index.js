@@ -179,10 +179,10 @@ export class PageFaves {
     return isOk
   }
 
-  remove (url) {
+  remove (url, index = null) {
     url = toRelativeUrl(url)
     if (!url) return false
-    const isOk = this.state.remove(url)
+    const isOk = this.state.remove(url, index)
     if (isOk) this.#ping('removed', { url })
     return isOk
   }
@@ -406,8 +406,8 @@ export class PageFaves {
   #createOverlay () {
     this.overlay = new Overlay({
       getList: () => this.state.list(),
-      onRemove: noBubbleFn((url) => {
-        this.remove(url)
+      onRemove: noBubbleFn((url, index) => {
+        this.remove(url, index)
         this.overlay.update()
         this.updateScreen()
       }),

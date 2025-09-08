@@ -87,10 +87,17 @@ export class State {
     return true
   }
 
-  remove (url) {
+  remove (url, index = null) {
     const before = this.bookmarks.length
     this.bookmarks = this.bookmarks.filter(b => b.url !== url)
-    if (this.bookmarks.length !== before) {
+    let after = this.bookmarks.length
+    if(before === after) {
+      if( index !== null && index >= 0 && index < this.bookmarks.length) {
+          this.bookmarks.splice(index, 1)
+      }
+    }
+    after = this.bookmarks.length
+    if (after !== before) {
       this.persist()
       return true
     }

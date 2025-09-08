@@ -46,6 +46,16 @@ export class State {
     )
   }
 
+  #loggedInUserHasBeenSyncedFromServer = false
+
+  get loggedInUserHasBeenSyncedFromServer () {
+    return this.#loggedInUserHasBeenSyncedFromServer
+  }
+
+  set loggedInUserHasBeenSyncedFromServer (v) {
+    this.#loggedInUserHasBeenSyncedFromServer = Boolean(v)
+  }
+
   onChange (fn) {
     this.listeners.add(fn)
     return () => this.listeners.delete(fn)
@@ -101,13 +111,19 @@ export class State {
 
   /**
    * Clear stored data.
-   * @param {{ keepCode?: boolean, keepShareLink?: boolean, silent?: boolean }} [opts]
+   * @param {{ keepCode?: boolean, keepShareLink?: boolean, keepBookmarks?: boolean }} [opts]
    */
   clear (opts = {}) {
-    this.bookmarks = []
-    this.code = ''
-    this.shareLink = ''
-    this.persist() // writes empties + emits change
+    if (!opts.keepCode) {
+      this.code = ''
+    }
+    if (!opts.keepShareLink) {
+      this.shareLink = ''
+    }
+    if (!opts.keepBookmarks) {
+      this.bookmarks = []
+    }
+    this.persist() //
     return true
   }
 

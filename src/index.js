@@ -87,7 +87,6 @@ export class PageFaves {
   }
 
   #started = false
-  #initPromise = null
   #isInSync = false
   #hotkeyListeners = null
   #watchDom = null
@@ -95,6 +94,10 @@ export class PageFaves {
   init ({
     delayMs = 20,
   } = {}) {
+    window.setTimeout(() => this.mount(), delayMs)
+  }
+
+  mount(){
 
     if (this.#started) return
     this.#started = true
@@ -113,7 +116,7 @@ export class PageFaves {
     // sync if needed -
     // @TODO: throttle this! / check if this works
     if (this.opts.syncOnLoad && this.opts.userIsLoggedIn) {
-      this.#syncIfStale().catch(e => {
+      this.syncFromServer(true, true).catch(e => {
         console.error('Sync failed', e)
         this.#isInSync = false
       })
@@ -121,6 +124,7 @@ export class PageFaves {
     this.updateScreen()
 
     this.#bindHotkeys()
+
   }
 
   updateScreen () {
@@ -209,7 +213,7 @@ export class PageFaves {
     }
   }
 
-  async syncFromServer () {
+  async syncFromServer (force = false, fullServerReplace = false) {
     if (!this.#canServer()) return
     const { isOk, data } = await this.net.post(this.net.endpoints.bookmarks, {
       code: this.state.code,
@@ -217,7 +221,7 @@ export class PageFaves {
     })
     if (isOk && data?.status === 'success') {
       await this.state.setCodeAndShareLink(data)
-      this.state.mergeFromServer(data)
+      this.state.mergeFromServer(data, fullServerReplace)
     }
   }
 
@@ -414,7 +418,7 @@ export class PageFaves {
         this.overlay.update()
       },
       onClose: noBubbleFn(() => this.hideOverlay()),
-      onSync: noBubbleFn(() => this.syncFromServer()),
+      onSync: noBubbleFn(() => this.syncFromServer(true, true)),
       onShare: noBubbleFn((el) => this.copyShareLink(el)),
       // NEW: pass login awareness to overlay (for CTA)
       shareLink: () => this.state.getShareLink(),
@@ -455,11 +459,6 @@ export class PageFaves {
 
   #canServer () {
     return !!this.net?.baseUrl
-  }
-
-  async #syncIfStale () {
-    if (this.#isInSync === true) return
-    await this.syncFromServer()
   }
 
   #watchDomInit () {

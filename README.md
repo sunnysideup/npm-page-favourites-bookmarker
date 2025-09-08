@@ -104,6 +104,10 @@ and you can set any of the configs above on a page by page basis
     currentPageTitle: document.querySelector('h2.title')?.innerText || ''
     currentImagelink: document.querySelector('meta[property="og:image"]')?.content || ''
     currentDescription: document.querySelector('meta[property="og:description"]')?.content || ''
+    phrases: {
+      favouritesTitle: 'My Favourite blog entries',
+      noBookmarksText: 'You do not have any favourites yet. To add some, on any page, click on the ❤ icon on the bottom right of your screen.'
+    }
   }
 </script>
 

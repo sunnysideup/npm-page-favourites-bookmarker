@@ -35,7 +35,7 @@ export class HeartsOtherPages {
     if (!outerHeartsContainer) return []
     /** @type {Heart[]} */
     outerHeartsContainer
-      .querySelectorAll('.' + this.opts.htmlClasses.heartForCurrentPageHolder)
+      .querySelectorAll('.' + this.opts.htmlClasses.heartForAnotherPageHolder)
       .forEach(el => this.createAndMountHeart(el))
     return this.hearts
   }
@@ -69,7 +69,7 @@ export class HeartsOtherPages {
       appendTo: el,
       position: null,
       heartsLoadingDelay: this.opts.heartsLoadingDelay,
-      templates: this.opts.templates.heart,
+      templates: this.opts.templates,
       additionalClasses: [this.opts.htmlClasses.heartForAnotherPageInner],
       htmlClasses: this.opts.htmlClasses,
       phrases: this.opts.phrases

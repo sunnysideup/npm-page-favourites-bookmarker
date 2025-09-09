@@ -13,6 +13,7 @@ export class Heart {
    *  templates:{
    *    heart:Function
    *  },
+   *  additionalClasses?: string[],
    *  htmlClasses Record<string, string>,
    *  phrases Record<string, string>,
    * }} opts
@@ -32,6 +33,7 @@ export class Heart {
       onClick: this.opts.onClick,
       onShowOverlay: this.opts.onShowOverlay,
       position: this.opts.position,
+      additionalClasses: this.opts.additionalClasses,
       htmlClasses: this.opts.htmlClasses,
       phrases: this.opts.phrases
     })
@@ -44,13 +46,16 @@ export class Heart {
     return this
   }
 
-  handleHeartClick(e) {
+  handleHeartClick (e) {
     this.update()
 
     if (this.opts.numberOfBookmarks() > 0) {
       this.myHeart.classList.add(this.opts.htmlClasses.heartIsHot)
       const delay = this.opts.heartsLoadingDelay || 1000
-      setTimeout(() => this.myHeart?.classList.remove(this.opts.htmlClasses.heartIsHot), delay)
+      setTimeout(
+        () => this.myHeart?.classList.remove(this.opts.htmlClasses.heartIsHot),
+        delay
+      )
     }
   }
 
@@ -61,8 +66,12 @@ export class Heart {
       const on = this.opts.isOn()
 
       this.heartBtn.classList.toggle(this.opts.htmlClasses.on, on)
-      this.heartBtn.textContent = on ? this.opts.phrases.heartOn : this.opts.phrases.heartOff
-      this.heartBtn.title = on ? this.opts.phrases.removeBookmark : this.opts.phrases.addBookmark
+      this.heartBtn.textContent = on
+        ? this.opts.phrases.heartOn
+        : this.opts.phrases.heartOff
+      this.heartBtn.title = on
+        ? this.opts.phrases.removeBookmark
+        : this.opts.phrases.addBookmark
     }
     if (this.showBtn) {
       const visible = this.opts.numberOfBookmarks() > 0

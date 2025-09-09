@@ -1,5 +1,4 @@
 export const defaultTemplates = Object.freeze({
-
   showOverlayToggle: ({ onClick, htmlClasses, phrases }) => {
     const btn = document.createElement('button')
     btn.className = htmlClasses.showBookmarks
@@ -14,12 +13,30 @@ export const defaultTemplates = Object.freeze({
     return { btn, span }
   },
 
-  heart: ({ onClick, onShowOverlay, position, htmlClasses, phrases }) => {
+  heart: ({
+    onClick,
+    onShowOverlay,
+    position,
+    additionalClasses,
+    htmlClasses,
+    phrases
+  }) => {
     const wrap = document.createElement('div')
     wrap.className = htmlClasses.heartWrap
     if (position) {
-      wrap.classList.add(`${htmlClasses.heartWrap}--${position.leftRight === 'left' ? 'left' : 'right'}`)
-      wrap.classList.add(`${htmlClasses.heartWrap}--${position.topBottom === 'top' ? 'top' : 'bottom'}`)
+      wrap.classList.add(
+        `${htmlClasses.heartWrap}--${
+          position.leftRight === 'left' ? 'left' : 'right'
+        }`
+      )
+      wrap.classList.add(
+        `${htmlClasses.heartWrap}--${
+          position.topBottom === 'top' ? 'top' : 'bottom'
+        }`
+      )
+    }
+    if (additionalClasses && Array.isArray(additionalClasses)) {
+      additionalClasses.forEach(c => wrap.classList.add(c))
     }
 
     const showBtn = document.createElement('button')
@@ -61,7 +78,7 @@ export const defaultTemplates = Object.freeze({
     bar.appendChild(title)
 
     // login call to action
-    if(hasBookmarks) {
+    if (hasBookmarks) {
       if (loginUrl && !userIsLoggedIn) {
         const login = document.createElement('a')
         login.className = `${htmlClasses.btn} ${htmlClasses.login}`
@@ -80,11 +97,10 @@ export const defaultTemplates = Object.freeze({
         share.textContent = phrases.shareText
         share.title = phrases.shareExplanation
         share.setAttribute('aria-label', phrases.shareExplanation)
-        share.addEventListener('click', (e) => onShare(e, share))
+        share.addEventListener('click', e => onShare(e, share))
         bar.append(share)
       }
       if (emailLink) {
-
         const emailBtn = document.createElement('a')
         emailBtn.className = `${htmlClasses.btn} ${htmlClasses.email}`
         emailBtn.href = emailLink
@@ -145,7 +161,7 @@ export const defaultTemplates = Object.freeze({
     del.className = `${htmlClasses.btn} ${htmlClasses.del}`
     del.type = 'button'
     del.textContent = phrases.heartSymbol
-    del.addEventListener('click', (e) => onRemove(e, item.url, index))
+    del.addEventListener('click', e => onRemove(e, item.url, index))
 
     let img
     if (item.imagelink) {
@@ -162,13 +178,7 @@ export const defaultTemplates = Object.freeze({
       p.textContent = item.description
     }
 
-    row.append(
-      drag,
-      ...(img ? [img] : []),
-      a,
-      ...(p ? [p] : []),
-      del
-    )
+    row.append(drag, ...(img ? [img] : []), a, ...(p ? [p] : []), del)
 
     row.addEventListener('dragstart', e => {
       e.dataTransfer.setData('text/plain', String(index))

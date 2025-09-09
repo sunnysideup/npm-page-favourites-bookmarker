@@ -23,9 +23,10 @@ export const htmlClasses = Object.freeze({
   off: 'pf-off',
   heartForAnotherPage: 'pf-heart-for-another-page',
   heartForAnotherPageInner: 'pf-heart-for-another-page-inner',
+  heartForCurrentPage: 'pf-heart-for-current-page',
   noBookmarks: 'pf-no-bookmarks',
   noBookmarksList: 'pf-no-bookmarks-list',
   hasBookmarks: 'pf-has-bookmarks',
   heartForCurrentPage: 'pf-heart-for-current-page',
-  overlayToggleContainer: 'pf-overlay-toggle-container',
+  overlayToggleContainer: 'pf-overlay-toggle-container'
 })

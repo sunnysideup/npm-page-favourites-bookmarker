@@ -44,7 +44,7 @@
   font-size: 24px;
   line-height: 1;
 
-  border: 2px solid #e11d48;
+  border: 2px solid var(--pf-border-color, red);
   border-radius: 9999px;
   background: #fff;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
@@ -92,14 +92,14 @@
     transition: all 0.3s ease;
     &:hover,
     &:focus {
-      color: #e11d48; /* red on hover */
+      color: var(--pf-heart-hover-color, red);
     }
     &.pf-heart {
       filter: grayscale(100%);
       opacity: 0.37;
       &.pf-on,
       &:hover {
-        color: #e11d48; /* red when on */
+        color: var(--pf-heart-hover-color, red);
         filter: grayscale(0%);
       }
       &.pf-on {

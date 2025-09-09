@@ -8,7 +8,12 @@ import { WatchDom } from './core/watch-dom.js'
 import { OverlayToggle } from './ui/overlay-toggle.js'
 
 // functions
-import { deepMerge, toRelativeUrl, toAbsoluteUrl, noBubbleFn } from './core/utils.js'
+import {
+  deepMerge,
+  toRelativeUrl,
+  toAbsoluteUrl,
+  noBubbleFn
+} from './core/utils.js'
 
 // objects
 import { defaultTemplates } from './definitions/templates.js'
@@ -69,7 +74,6 @@ export class PageFaves {
     // login
     userIsLoggedIn: false,
     loginUrl: ''
-
   }
 
   /**
@@ -83,7 +87,6 @@ export class PageFaves {
         : {}
     // precedence: defaults < siteWideOpts < pageConfig
     this.opts = deepMerge(PageFaves.DEFAULTS, siteWideOpts, pageConfig)
-
   }
 
   #started = false
@@ -97,8 +100,7 @@ export class PageFaves {
     })
   }
 
-  mount(){
-
+  mount () {
     if (this.#started) return
     this.#started = true
     this.#setupState()
@@ -115,7 +117,12 @@ export class PageFaves {
 
     // sync if needed -
     // @TODO: throttle this! / check if this works
-    console.log('sync on load?', this.opts.syncLoggedInUsersToServer, 'user logged in?', this.opts.userIsLoggedIn)
+    console.log(
+      'sync on load?',
+      this.opts.syncLoggedInUsersToServer,
+      'user logged in?',
+      this.opts.userIsLoggedIn
+    )
     if (this.opts.syncLoggedInUsersToServer && this.opts.userIsLoggedIn) {
       this.syncFromServer(true, true).catch(e => {
         console.error('Sync failed', e)
@@ -127,13 +134,12 @@ export class PageFaves {
     this.updateScreen()
 
     this.#bindHotkeys()
-
   }
 
   updateScreen () {
     this.allHearts.forEach(h => h.update())
     this.overlayToggle?.update()
-    if(this.overlay.isShown()) {
+    if (this.overlay.isShown()) {
       this.overlay.update()
     }
   }
@@ -164,7 +170,7 @@ export class PageFaves {
   }
 
   toggleFromData (payload) {
-    const {url, title, imagelink, description} = payload || {}
+    const { url, title, imagelink, description } = payload || {}
 
     if (!url) return false
     if (this.isBookmarked(url)) {
@@ -218,7 +224,7 @@ export class PageFaves {
 
   async syncFromServer (force = false, fullServerReplace = false) {
     if (!this.#canServer()) return
-    if(force !== true && this.#isInSync === true) return
+    if (force !== true && this.#isInSync === true) return
     const bookmarks = fullServerReplace ? [] : this.state.list()
     const { isOk, data } = await this.net.post(this.net.endpoints.bookmarks, {
       code: this.state.code,
@@ -245,7 +251,7 @@ export class PageFaves {
         document.execCommand('copy')
         textarea.remove()
       }
-      if(el) {
+      if (el) {
         el.innerText = this.opts.phrases.copiedText
         setTimeout(() => {
           el.innerText = this.opts.phrases.shareText
@@ -262,7 +268,9 @@ export class PageFaves {
   }
 
   destroy () {
-    try { this.unsubscribe?.() } catch {}
+    try {
+      this.unsubscribe?.()
+    } catch {}
     this.allHearts?.forEach(h => h.unmount?.())
     this.overlay?.unmount()
     this.overlayToggle?.unmount()
@@ -283,15 +291,18 @@ export class PageFaves {
     this.#watchDom = null
   }
 
-  getEmailLink() {
+  getEmailLink () {
     const shareLinkURL = this.getShareLinkAbsolute()
     const u = new URL('mailto:')
-    u.searchParams.set('subject', this.opts.phrases.favouritesTitle + ': ' + shareLinkURL)
+    u.searchParams.set(
+      'subject',
+      this.opts.phrases.favouritesTitle + ': ' + shareLinkURL
+    )
     u.searchParams.set('body', shareLinkURL)
     return u.href
   }
 
-  getShareLinkAbsolute() {
+  getShareLinkAbsolute () {
     const shareLink = this.state.getShareLink()
     if (!shareLink) return ''
     return new URL(shareLink, location.origin).href
@@ -310,7 +321,10 @@ export class PageFaves {
       if (isOk && data?.status === 'success') {
         await this.state.setCodeAndShareLink(data)
         const localCount = this.getLocalBookmarkCount()
-        if (Number.isFinite(data.numberOfBookmarks) && localCount !== data.numberOfBookmarks) {
+        if (
+          Number.isFinite(data.numberOfBookmarks) &&
+          localCount !== data.numberOfBookmarks
+        ) {
           this.#isInSync = false
           await this.syncFromServer()
         } else {
@@ -327,7 +341,7 @@ export class PageFaves {
 
   #bindHotkeys () {
     if (this.#hotkeyListeners === null) {
-      this.#hotkeyListeners = (e) => {
+      this.#hotkeyListeners = e => {
         const tag = (e.target && e.target.tagName) || ''
         if (e.repeat) return
         if (/(INPUT|TEXTAREA|SELECT)/.test(tag)) return
@@ -373,14 +387,19 @@ export class PageFaves {
 
   #createPageHeart () {
     this.shouldLoad =
-      typeof this.opts.loadOnThisPage === 'boolean' ? this.opts.loadOnThisPage : !!this.opts.loadByDefault
+      typeof this.opts.loadOnThisPage === 'boolean'
+        ? this.opts.loadOnThisPage
+        : !!this.opts.loadByDefault
     if (this.shouldLoad && !this.heart) {
       this.heart = new Heart({
         onClick: noBubbleFn(() => this.toggleCurrent()),
         onShowOverlay: noBubbleFn(() => this.toggleOverlay()),
         numberOfBookmarks: () => this.state.list().length,
         isOn: () => this.isBookmarked(),
-        appendTo: document.querySelector('.' + this.opts.htmlClasses.heartForCurrentPage) ?? document.body,
+        appendTo:
+          document.querySelector(
+            '.' + this.opts.htmlClasses.heartForCurrentPage
+          ) ?? document.body,
         position: {
           leftRight: this.opts.heartPositionLeftRight,
           topBottom: this.opts.heartPositionTopBottom
@@ -389,6 +408,7 @@ export class PageFaves {
         templates: {
           heart: this.opts.templates.heart
         },
+        additionalClasses: [this.opts.htmlClasses.heartForCurrentPage],
         htmlClasses: this.opts.htmlClasses,
         phrases: this.opts.phrases
       })
@@ -399,27 +419,28 @@ export class PageFaves {
   }
 
   #createOtherPageHearts () {
-    this.otherHearts = new HeartsOtherPages(
-      {
-        onClick: noBubbleFn((payload) => this.toggleFromData(payload)),
-        onShowOverlay: noBubbleFn(() => this.toggleOverlay()),
-        numberOfBookmarks: () => this.state.list().length,
-        isOn: (url) => this.isBookmarked(url),
-        // no appendTo - hearts are appended to their own elements
-        // no position - hearts are positioned via CSS
-        heartsLoadingDelay: this.opts.heartsLoadingDelay,
-        templates: {
-          heart: this.opts.templates.heart
-        },
-        htmlClasses: this.opts.htmlClasses,
-        phrases: this.opts.phrases
-      }
-    )
+    this.otherHearts = new HeartsOtherPages({
+      onClick: noBubbleFn(payload => this.toggleFromData(payload)),
+      onShowOverlay: noBubbleFn(() => this.toggleOverlay()),
+      numberOfBookmarks: () => this.state.list().length,
+      isOn: url => this.isBookmarked(url),
+      // no appendTo - hearts are appended to their own elements
+      // no position - hearts are positioned via CSS
+      heartsLoadingDelay: this.opts.heartsLoadingDelay,
+      templates: {
+        heart: this.opts.templates.heart
+      },
+      htmlClasses: this.opts.htmlClasses,
+      phrases: this.opts.phrases
+    })
     this.otherHearts.mount()
   }
 
   #setAllHearts () {
-    this.allHearts = [this.heart, ...(this.otherHearts?.getHearts() || [])].filter(Boolean)
+    this.allHearts = [
+      this.heart,
+      ...(this.otherHearts?.getHearts() || [])
+    ].filter(Boolean)
   }
 
   #createOverlay () {
@@ -438,7 +459,7 @@ export class PageFaves {
       },
       onClose: noBubbleFn(() => this.hideOverlay()),
       onSync: noBubbleFn(() => this.syncFromServer(true, true)),
-      onShare: noBubbleFn((el) => this.copyShareLink(el)),
+      onShare: noBubbleFn(el => this.copyShareLink(el)),
       // NEW: pass login awareness to overlay (for CTA)
       shareLink: this.state.getShareLink(),
       emailLink: this.getEmailLink(),
@@ -457,9 +478,13 @@ export class PageFaves {
 
   #createOverlayToggle () {
     this.overlayToggle = new OverlayToggle({
-      onClick: noBubbleFn(() => { this.toggleOverlay(); }),
+      onClick: noBubbleFn(() => {
+        this.toggleOverlay()
+      }),
       numberOfBookmarks: () => this.state.list().length,
-      appendTo: document.querySelector('.' + this.opts.htmlClasses.overlayToggleContainer),
+      appendTo: document.querySelector(
+        '.' + this.opts.htmlClasses.overlayToggleContainer
+      ),
       templates: {
         showOverlayToggle: this.opts.templates.showOverlayToggle
       },

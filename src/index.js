@@ -398,7 +398,7 @@ export class PageFaves {
         isOn: () => this.isBookmarked(),
         appendTo:
           document.querySelector(
-            '.' + this.opts.htmlClasses.heartForCurrentPage
+            '.' + this.opts.htmlClasses.heartForCurrentPageHolder
           ) ?? document.body,
         position: {
           leftRight: this.opts.heartPositionLeftRight,
@@ -408,7 +408,7 @@ export class PageFaves {
         templates: {
           heart: this.opts.templates.heart
         },
-        additionalClasses: [this.opts.htmlClasses.heartForCurrentPage],
+        additionalClasses: [this.opts.htmlClasses.heartForCurrentPageInner],
         htmlClasses: this.opts.htmlClasses,
         phrases: this.opts.phrases
       })
@@ -518,7 +518,7 @@ export class PageFaves {
 
     this.#watchDom = new WatchDom({
       root,
-      className: this.opts.htmlClasses.heartForAnotherPage,
+      className: this.opts.htmlClasses.heartForCurrentPageHolder,
       onAdd: el => {
         this.otherHearts.createAndMountHeart(el)
         this.#setAllHearts()

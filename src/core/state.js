@@ -174,7 +174,6 @@ export class State {
     }
 
     const map = fullReplace ? new Map() : new Map(this.bookmarks.map(b => [b.url, b]))
-    console.log(serverList);
     if (Array.isArray(serverList.bookmarks)) {
       for (const { url, title, imagelink, description, ts } of serverList.bookmarks) {
         const { newUrl, newTitle, newImagelink, newDescription } =

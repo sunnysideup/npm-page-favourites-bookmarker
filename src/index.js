@@ -117,12 +117,7 @@ export class PageFaves {
 
     // sync if needed -
     // @TODO: throttle this! / check if this works
-    console.log(
-      'sync on load?',
-      this.opts.syncLoggedInUsersToServer,
-      'user logged in?',
-      this.opts.userIsLoggedIn
-    )
+
     if (this.opts.syncLoggedInUsersToServer && this.opts.userIsLoggedIn) {
       this.syncFromServer(true, true).catch(e => {
         console.error('Sync failed', e)
@@ -515,19 +510,14 @@ export class PageFaves {
     const selector = this.opts.heartsOtherPagesSelector
     const root = document.querySelector(selector) || document.body
     if (!root) return
-
     this.#watchDom = new WatchDom({
-      root,
-      className: this.opts.htmlClasses.heartForCurrentPageHolder,
-      onAdd: el => {
-        this.otherHearts.createAndMountHeart(el)
-        this.#setAllHearts()
-      },
-      onRemove: el => {
-        this.otherHearts.removeHeart(el)
-        this.#setAllHearts()
-      },
-      observeToggles: false
+      root: document.querySelector(this.opts.heartsOtherPagesSelector) ?? document.body,
+      className: this.opts.htmlClasses.heartForAnotherPageHolder,
+      onAdd: el => { this.otherHearts.createAndMountHeart(el); this.#setAllHearts() },
+      onRemove: el => { this.otherHearts.removeHeart(el); this.#setAllHearts() },
+      observeToggles: true,
+      debug: true,
+      immediateFlush: true
     }).start()
   }
 }

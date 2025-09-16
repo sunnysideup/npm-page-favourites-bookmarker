@@ -116,13 +116,13 @@
   background-color: transparent;
   box-shadow: none;
   border: none;
-  margin-left: -3px;
-  margin-top: -3px;
+  margin-left: 3px;
+  margin-top: 3px;
   * {
     background-color: transparent;
   }
   &:hover {
-    background-color: transparent;
+    background-color: #fff;
     box-shadow: none;
   }
 }

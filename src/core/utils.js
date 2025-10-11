@@ -1,7 +1,11 @@
 import DOMPurify from 'dompurify'
 
 // utils/merge.js
-const isPlainObject = (x) => x && typeof x === 'object' && !Array.isArray(x) && Object.getPrototypeOf(x) === Object.prototype
+const isPlainObject = x =>
+  x &&
+  typeof x === 'object' &&
+  !Array.isArray(x) &&
+  Object.getPrototypeOf(x) === Object.prototype
 
 export function deepMerge (...sources) {
   const out = {}
@@ -9,8 +13,12 @@ export function deepMerge (...sources) {
     if (!isPlainObject(src)) continue
     for (const k of Object.keys(src)) {
       const v = src[k]
-      if (Array.isArray(v)) out[k] = Array.isArray(out[k]) ? [...out[k], ...v] : [...v] // or: out[k] = [...v]
-      else out[k] = isPlainObject(v) && isPlainObject(out[k]) ? deepMerge(out[k], v) : v
+      if (Array.isArray(v))
+        out[k] = Array.isArray(out[k]) ? [...out[k], ...v] : [...v]
+      // or: out[k] = [...v]
+      else
+        out[k] =
+          isPlainObject(v) && isPlainObject(out[k]) ? deepMerge(out[k], v) : v
     }
   }
   return out
@@ -24,7 +32,8 @@ export function makeAlphaNumCode (length = 12) {
     crypto.getRandomValues(rnd)
     for (let i = 0; i < length; i++) out.push(chars[rnd[i] % chars.length])
   } else {
-    for (let i = 0; i < length; i++) out.push(chars[Math.floor(Math.random() * chars.length)])
+    for (let i = 0; i < length; i++)
+      out.push(chars[Math.floor(Math.random() * chars.length)])
   }
   return out.join('')
 }
@@ -65,8 +74,11 @@ export const sanitizeHtml = function (str) {
   //   .replace(/'/g, '&#39;')
 }
 
-export const stripTags = (str) => {
-  return DOMPurify.sanitize(String(str ?? ''), { ALLOWED_TAGS: [], ALLOWED_ATTR: [] })
+export const stripTags = str => {
+  return DOMPurify.sanitize(String(str ?? ''), {
+    ALLOWED_TAGS: [],
+    ALLOWED_ATTR: []
+  })
   // const tmp = document.createElement('div')
   // tmp.innerHTML = String(input ?? '')
   // return tmp.textContent || ''
@@ -76,14 +88,14 @@ export const stripToText = (str = '') => {
   const cleaned = stripTags(str)
   const tmp = document.createElement('textarea')
   tmp.innerHTML = cleaned
-  return tmp.value // decoded text
+  return tmp.value
 }
 
-
-export const noBubbleFn = (fn) => function (...args) {
-  const e = args[0]
-  e?.preventDefault?.()
-  e?.stopPropagation?.()
-  e?.stopImmediatePropagation?.()
-  return fn?.apply(this, args.slice(1)) // ← pass everything *after* the event
-}
+export const noBubbleFn = fn =>
+  function (...args) {
+    const e = args[0]
+    e?.preventDefault?.()
+    e?.stopPropagation?.()
+    e?.stopImmediatePropagation?.()
+    return fn?.apply(this, args.slice(1))
+  }

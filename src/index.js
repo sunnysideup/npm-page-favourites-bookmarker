@@ -516,7 +516,7 @@ export class PageFaves {
       onAdd: el => { this.otherHearts.createAndMountHeart(el); this.#setAllHearts() },
       onRemove: el => { this.otherHearts.removeHeart(el); this.#setAllHearts() },
       observeToggles: true,
-      debug: true,
+      debug: false,
       immediateFlush: true
     }).start()
   }

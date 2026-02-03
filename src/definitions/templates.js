@@ -140,6 +140,7 @@ export const defaultTemplates = Object.freeze({
     return noBookmarks
   },
 
+
   overlayRow: ({ item, index, onRemove, onReorder, htmlClasses, phrases }) => {
     const row = document.createElement('div')
     row.className = htmlClasses.row
@@ -161,15 +162,23 @@ export const defaultTemplates = Object.freeze({
     del.className = `${htmlClasses.btn} ${htmlClasses.del}`
     del.type = 'button'
     del.textContent = phrases.heartSymbol
-    del.addEventListener('click', e => onRemove(e, item.url, index))
+    del.addEventListener('click', (e) => onRemove(e, item.url, index))
 
-    let img
+    let imgLink
     if (item.imagelink) {
-      img = document.createElement('img')
+      imgLink = document.createElement('a')
+      imgLink.className = htmlClasses.imageLink || ''
+      imgLink.href = item.url
+      imgLink.target = '_blank'
+      imgLink.rel = 'noopener'
+
+      const img = document.createElement('img')
       img.src = item.imagelink
       img.alt = item.title || ''
       img.height = 50
       img.loading = 'lazy'
+
+      imgLink.append(img)
     }
 
     let p
@@ -178,13 +187,13 @@ export const defaultTemplates = Object.freeze({
       p.textContent = item.description
     }
 
-    row.append(drag, ...(img ? [img] : []), a, ...(p ? [p] : []), del)
+    row.append(drag, ...(imgLink ? [imgLink] : []), a, ...(p ? [p] : []), del)
 
-    row.addEventListener('dragstart', e => {
+    row.addEventListener('dragstart', (e) => {
       e.dataTransfer.setData('text/plain', String(index))
     })
-    row.addEventListener('dragover', e => e.preventDefault())
-    row.addEventListener('drop', e => {
+    row.addEventListener('dragover', (e) => e.preventDefault())
+    row.addEventListener('drop', (e) => {
       e.preventDefault()
       const from = Number(e.dataTransfer.getData('text/plain'))
       const to = index

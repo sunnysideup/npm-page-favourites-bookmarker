@@ -22,6 +22,10 @@
     border-bottom: 1px solid #ccc;
     .pf-title {
       flex: 1;
+      display: none;
+      @media (min-width: 640px) {
+        display: block;
+      }      
     }
     .pf-share,
     .pf-login,

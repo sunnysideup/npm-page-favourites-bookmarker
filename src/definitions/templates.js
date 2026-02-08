@@ -4,7 +4,7 @@ export const defaultTemplates = Object.freeze({
     btn.className = htmlClasses.showBookmarks
     btn.setAttribute('aria-label', phrases.showFavouritesListExplanation)
     btn.title = phrases.showFavouritesTitle
-    btn.textContent = phrases.heartSymbol
+    btn.innerHTML = phrases.heartSymbol
     btn.addEventListener('click', onClick)
 
     const span = document.createElement('span')
@@ -49,7 +49,7 @@ export const defaultTemplates = Object.freeze({
 
     const heartBtn = document.createElement('button')
     heartBtn.className = htmlClasses.heart
-    heartBtn.textContent = phrases.heartSymbol
+    heartBtn.innerHTML = phrases.heartSymbol
     heartBtn.setAttribute('aria-label', phrases.toggleBookmarkLabel)
     heartBtn.addEventListener('click', onClick)
     wrap.appendChild(heartBtn)

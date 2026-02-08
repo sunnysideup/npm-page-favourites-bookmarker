@@ -140,7 +140,6 @@ export const defaultTemplates = Object.freeze({
     return noBookmarks
   },
 
-
   overlayRow: ({ item, index, onRemove, onReorder, htmlClasses, phrases }) => {
     const row = document.createElement('div')
     row.className = htmlClasses.row
@@ -161,8 +160,8 @@ export const defaultTemplates = Object.freeze({
     const del = document.createElement('button')
     del.className = `${htmlClasses.btn} ${htmlClasses.del}`
     del.type = 'button'
-    del.textContent = phrases.heartSymbol
-    del.addEventListener('click', (e) => onRemove(e, item.url, index))
+    del.textContent = phrases.removeSymbol
+    del.addEventListener('click', e => onRemove(e, item.url, index))
 
     let imgLink
     if (item.imagelink) {
@@ -189,11 +188,11 @@ export const defaultTemplates = Object.freeze({
 
     row.append(drag, ...(imgLink ? [imgLink] : []), a, ...(p ? [p] : []), del)
 
-    row.addEventListener('dragstart', (e) => {
+    row.addEventListener('dragstart', e => {
       e.dataTransfer.setData('text/plain', String(index))
     })
-    row.addEventListener('dragover', (e) => e.preventDefault())
-    row.addEventListener('drop', (e) => {
+    row.addEventListener('dragover', e => e.preventDefault())
+    row.addEventListener('drop', e => {
       e.preventDefault()
       const from = Number(e.dataTransfer.getData('text/plain'))
       const to = index

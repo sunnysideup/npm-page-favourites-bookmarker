@@ -5,9 +5,9 @@ export const phrases = Object.freeze({
   heartSymbol:
     '<button class="pf-symbol pf-symbol--heart" aria-label="heart"><span class="sr-only">♥</span></button>',
   heartOnSymbol:
-    '<button class="pf-symbol pf-symbol--heart pf-heart-on" aria-label="heart on"><span class="sr-only">♥</span></button>',
+    '<span class="pf-symbol pf-symbol--heart pf-heart-on" aria-label="heart on"><span class="sr-only">♥</span></span>',
   heartOffSymbol:
-    '<button class="pf-symbol pf-symbol--heart pf-heart-off" aria-label="heart off"><span class="sr-only">♡</span></button>', //'❤', // ♡♡♡♡
+    '<span class="pf-symbol pf-symbol--heart pf-heart-off" aria-label="heart off"><span class="sr-only">♡</span></span>', //'❤', // ♡♡♡♡
   removeSymbol:
     '<span class="pf-symbol pf-symbol--delete" aria-label="Remove"><span class="sr-only">×</span></span>', //'❤', // ♡♡♡♡
 

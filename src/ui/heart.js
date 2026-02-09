@@ -66,9 +66,9 @@ export class Heart {
       const on = this.opts.isOn()
 
       this.heartBtn.classList.toggle(this.opts.htmlClasses.on, on)
-      this.heartBtn.textContent = on
-        ? this.opts.phrases.heartOn
-        : this.opts.phrases.heartOff
+      this.heartBtn.innerHTML = on
+        ? this.opts.phrases.heartOnSymbol
+        : this.opts.phrases.heartOffSymbol
       this.heartBtn.title = on
         ? this.opts.phrases.removeBookmark
         : this.opts.phrases.addBookmark

@@ -3,13 +3,13 @@ export const phrases = Object.freeze({
   removeBookmark: 'Remove from favourites',
   toggleBookmarkLabel: 'Toggle favourite',
   heartSymbol:
-    '<button class="pf-symbol pf-symbol--heart" aria-label="heart"><span class="srOnlyChar">♥</span></button>',
-  heartOn:
-    '<button class="pf-symbol pf-symbol--heart pf-heart-on" aria-label="heart on"><span class="srOnlyChar">♥</span></button>',
-  heartOff:
-    '<button class="pf-symbol pf-symbol--heart pf-heart-off" aria-label="heart off"><span class="srOnlyChar">♡</span></button>', //'❤', // ♡♡♡♡
+    '<button class="pf-symbol pf-symbol--heart" aria-label="heart"><span class="sr-only">♥</span></button>',
+  heartOnSymbol:
+    '<button class="pf-symbol pf-symbol--heart pf-heart-on" aria-label="heart on"><span class="sr-only">♥</span></button>',
+  heartOffSymbol:
+    '<button class="pf-symbol pf-symbol--heart pf-heart-off" aria-label="heart off"><span class="sr-only">♡</span></button>', //'❤', // ♡♡♡♡
   removeSymbol:
-    '<button class="pf-symbol pf-symbol--delete" aria-label="Remove"><span class="srOnlyChar">×</span></button>', //'❤', // ♡♡♡♡
+    '<span class="pf-symbol pf-symbol--delete" aria-label="Remove"><span class="sr-only">×</span></span>', //'❤', // ♡♡♡♡
 
   favouritesTitle: 'Favourites',
 

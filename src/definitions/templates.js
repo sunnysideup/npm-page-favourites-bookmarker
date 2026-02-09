@@ -160,7 +160,7 @@ export const defaultTemplates = Object.freeze({
     const del = document.createElement('button')
     del.className = `${htmlClasses.btn} ${htmlClasses.del}`
     del.type = 'button'
-    del.textContent = phrases.removeSymbol
+    del.innerHTML = phrases.removeSymbol
     del.addEventListener('click', e => onRemove(e, item.url, index))
 
     let imgLink

@@ -3,7 +3,7 @@ export const phrases = Object.freeze({
   removeBookmark: 'Remove from favourites',
   toggleBookmarkLabel: 'Toggle favourite',
   heartSymbol:
-    '<button class="pf-symbol pf-symbol--heart" aria-label="heart"><span class="sr-only">♥</span></button>',
+    '<strong class="pf-symbol pf-symbol--heart" aria-label="heart"><span class="sr-only">♥</span></strong>',
   heartOnSymbol:
     '<span class="pf-symbol pf-symbol--heart pf-heart-on" aria-label="heart on"><span class="sr-only">♥</span></span>',
   heartOffSymbol:

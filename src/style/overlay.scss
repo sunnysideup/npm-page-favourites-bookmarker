@@ -61,11 +61,12 @@
     padding: 0;
     min-width: 3rem;
     display: block;
+    height: 3rem !important;
+    line-height: 3rem !important;
+    box-sizing: border-box;
     &:hover {
       color: #fff;
     }
-    height: 3rem !important;
-    line-height: 3rem !important;
     &.pf-del {
       color: #e11d48;
     }
